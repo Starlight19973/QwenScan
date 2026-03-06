@@ -1,0 +1,29 @@
+services:
+  qwenscan-proxy:
+    image: nginx:alpine
+    container_name: qwenscan-proxy
+    restart: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - services
+    labels:
+      - "traefik.enable=true"
+      # HTTPS router
+      - "traefik.http.routers.qwenscan.rule=PathPrefix(`/qwenscan`)"
+      - "traefik.http.routers.qwenscan.entrypoints=https"
+      - "traefik.http.routers.qwenscan.tls=true"
+      - "traefik.http.routers.qwenscan.middlewares=qwenscan-slash,qwenscan-strip"
+      # Service
+      - "traefik.http.services.qwenscan.loadbalancer.server.port=80"
+      - "traefik.http.services.qwenscan.loadbalancer.responseforwarding.flushinterval=100ms"
+      # Middlewares
+      - "traefik.http.middlewares.qwenscan-slash.redirectregex.regex=^(https?://[^/]+)/qwenscan$$"
+      - "traefik.http.middlewares.qwenscan-slash.redirectregex.replacement=$${1}/qwenscan/"
+      - "traefik.http.middlewares.qwenscan-slash.redirectregex.permanent=true"
+      - "traefik.http.middlewares.qwenscan-strip.stripprefix.prefixes=/qwenscan"
+networks:
+  services:
+    external: true

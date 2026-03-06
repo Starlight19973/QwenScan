@@ -1,0 +1,3211 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Архивариус</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#08090d;
+  --surface:#0f1118;
+  --surface-2:#161821;
+  --border:rgba(255,255,255,.06);
+  --border-h:rgba(255,255,255,.1);
+  --text:#e4e4e7;
+  --text-2:#a1a1aa;
+  --text-3:#52525b;
+  --accent:#6d5aff;
+  --accent-soft:rgba(109,90,255,.12);
+  --accent-glow:rgba(109,90,255,.25);
+  --green:#22c55e;
+  --green-soft:rgba(34,197,94,.1);
+  --amber:#f59e0b;
+  --amber-soft:rgba(245,158,11,.1);
+  --red:#ef4444;
+  --red-soft:rgba(239,68,68,.08);
+  --cyan:#06b6d4;
+  --pink:#ec4899;
+  --radius:14px;
+  --mono:'JetBrains Mono',monospace;
+}
+
+html{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+body{font-family:'Space Grotesk',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+
+body::before{content:'';position:fixed;inset:0;z-index:0;opacity:.03;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:128px 128px}
+
+
+/* === OCR VIEW === */
+.ocr-view{display:none;position:relative;z-index:1;height:calc(100vh - 65px);overflow:auto;padding:22px;background:var(--surface)}
+.ocr-shell{max-width:1400px;margin:0 auto}
+.ocr-drop{position:relative;border:1.5px dashed rgba(109,90,255,.25);border-radius:var(--radius);padding:36px 24px;text-align:center;cursor:pointer;transition:all .3s ease;background:var(--bg);overflow:hidden;margin-bottom:16px}
+.ocr-drop:hover,.ocr-drop.over{border-color:var(--accent)}
+.ocr-drop input{display:none}
+.ocr-file-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.ocr-file-item{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg);border:1px solid var(--border);border-radius:10px;font-size:13px}
+.ocr-file-name{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;margin-right:12px}
+.ocr-file-status{font-family:var(--mono);font-size:11px;color:var(--text-3)}
+.ocr-file-status.done{color:var(--green)}
+.ocr-file-status.error{color:var(--red)}
+.ocr-file-status.processing{color:var(--amber)}
+.ocr-file-actions{display:flex;gap:8px;margin-left:12px}
+.ocr-dl-btn{padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-2);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;text-decoration:none}
+.ocr-dl-btn:hover{border-color:var(--accent);color:var(--accent)}
+.ocr-dl-btn.primary{background:linear-gradient(135deg,var(--accent),#4b76ff);color:#fff;border-color:transparent}
+.ocr-dl-btn.primary:hover{box-shadow:0 0 14px var(--accent-glow)}
+.ocr-dl-btn:disabled{opacity:.5;cursor:not-allowed}
+.ocr-progress{margin:16px 0}
+.ocr-progress-bar{height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden;margin-top:6px}
+.ocr-progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--cyan));border-radius:3px;transition:width .3s}
+.ocr-progress-text{font-family:var(--mono);font-size:12px;color:var(--text-2)}
+.ocr-results{margin-top:16px}
+.ocr-preview-wrap{display:grid;grid-template-columns:1fr 1fr 280px;gap:12px;margin-top:12px}
+.ocr-preview-frame{width:100%;height:500px;border:1px solid var(--border);border-radius:10px;background:var(--bg)}
+.ocr-preview-label{font-size:11px;color:var(--text-3);margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.ocr-mode-select{padding:8px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:border-color .2s;min-width:180px}
+.ocr-mode-select:hover,.ocr-mode-select:focus{border-color:var(--accent);outline:none}
+.ocr-tags-col{overflow-y:auto;max-height:700px;padding:0}
+.ocr-tags-section{margin-bottom:12px}
+.ocr-tags-section-title{font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.ocr-tag-list{display:flex;flex-wrap:wrap;gap:6px}
+.ocr-tag-item{display:flex;align-items:center;gap:4px;padding:4px 8px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;font-size:12px}
+.ocr-tag-input{background:transparent;border:none;color:var(--text);font-family:inherit;font-size:12px;width:auto;min-width:60px;outline:none}
+.ocr-tag-input:focus{color:var(--accent)}
+.ocr-tag-save{padding:2px 6px;border-radius:4px;border:1px solid var(--accent);background:transparent;color:var(--accent);font-size:10px;cursor:pointer;display:none}
+.ocr-tag-item.edited .ocr-tag-save{display:inline-block}
+.ocr-export-bar{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.ocr-rendered-text{width:100%;min-height:300px;max-height:700px;overflow:auto;padding:14px;background:var(--bg);border:1px solid var(--border);border-radius:10px;font-family:var(--mono);font-size:12px;line-height:1.6;color:var(--text);word-break:break-word;margin:0}
+.ocr-rendered-text p{margin:0 0 2px 0;white-space:pre-wrap}
+.ocr-rendered-text table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12px}
+.ocr-rendered-text table th,.ocr-rendered-text table td{border:1px solid var(--border-h);padding:4px 8px;text-align:left;vertical-align:top}
+.ocr-rendered-text table th{background:var(--surface-2);font-weight:600;color:var(--text);font-size:11px;text-transform:uppercase;letter-spacing:.3px}
+.ocr-rendered-text table td{color:var(--text-2)}
+.ocr-rendered-text table tr:hover td{background:rgba(109,90,255,.04)}
+
+/* === NAV === */
+.nav{position:relative;z-index:1;display:flex;align-items:center;justify-content:space-between;padding:16px 24px;border-bottom:1px solid var(--border)}
+.nav-brand{display:flex;align-items:center;gap:10px}
+.nav-mark{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--pink));display:flex;align-items:center;justify-content:center}
+.nav-mark svg{width:18px;height:18px}
+.nav-name{font-size:18px;font-weight:700;letter-spacing:-.3px}
+.nav-badge{font-family:var(--mono);font-size:10px;font-weight:500;color:var(--text-3);background:var(--surface-2);border:1px solid var(--border);padding:3px 8px;border-radius:6px;letter-spacing:.5px}
+.nav-right{display:flex;align-items:center;gap:12px}
+.nav-tabs{display:flex;align-items:center;gap:8px}
+.nav-tab{border:none;border-radius:11px;padding:10px 18px;font-family:inherit;font-size:13px;font-weight:700;letter-spacing:.2px;cursor:pointer;transition:all .2s;background:var(--surface-2);color:var(--text-2);border:1px solid var(--border)}
+.nav-tab:hover{border-color:var(--border-h);transform:translateY(-1px)}
+.nav-tab.active{background:linear-gradient(135deg,var(--accent),#4b76ff);color:#fff;border-color:transparent;box-shadow:0 0 16px var(--accent-glow)}
+
+/* === TWO-PANEL LAYOUT === */
+.panels{position:relative;z-index:1;display:grid;grid-template-columns:1fr 1fr;height:calc(100vh - 65px);overflow:hidden}
+.panel{overflow-y:auto;padding:24px}
+.panel::-webkit-scrollbar{width:5px}
+.panel::-webkit-scrollbar-track{background:transparent}
+.panel::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:3px}
+.panel-left{border-right:1px solid var(--border)}
+.panel-right{background:var(--surface)}
+
+/* === PROMPTS VIEW === */
+.prompts-view{display:none;position:relative;z-index:1;height:calc(100vh - 65px);overflow:auto;padding:22px;background:var(--surface)}
+.prompts-shell{max-width:1320px;margin:0 auto;display:grid;grid-template-columns:340px 1fr;gap:18px}
+.prompts-side,.prompts-editor{background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.prompts-note{font-size:11px;color:var(--text-3);line-height:1.5}
+.prompts-side-head{margin-bottom:12px}
+.prompts-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 14px}
+.pm-btn{padding:10px 12px;border-radius:9px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-2);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}
+.pm-btn:hover{border-color:var(--accent);color:var(--accent)}
+.pm-btn.primary{background:linear-gradient(135deg,var(--accent),#4b76ff);color:#fff;border-color:transparent}
+.pm-btn.primary:hover{box-shadow:0 0 14px var(--accent-glow);transform:translateY(-1px)}
+.pm-btn.danger{border-color:rgba(239,68,68,.28);color:var(--red)}
+.pm-btn.danger:hover{background:var(--red-soft)}
+.pm-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
+.prompt-input{width:100%;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;outline:none;transition:border-color .2s;margin-bottom:10px}
+.prompt-input:focus{border-color:var(--accent)}
+.prompt-editor{width:100%;min-height:420px;max-height:65vh;padding:14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:var(--mono);font-size:12px;line-height:1.45;resize:vertical;outline:none}
+.prompt-editor:focus{border-color:var(--accent)}
+.prompts-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px}
+.prompt-status{font-size:11px;color:var(--text-3);min-height:16px}
+.prompt-status.ok{color:var(--green)}
+.prompt-status.err{color:var(--red)}
+.prompt-subtabs{display:flex;gap:6px;margin-bottom:14px}.prompt-subtab{flex:1;padding:8px 0;border-radius:8px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-2);font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;text-align:center}.prompt-subtab:hover{border-color:var(--border-h)}.prompt-subtab.active{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+
+.section-head{display:flex;align-items:center;gap:8px;margin-bottom:14px;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--text-3)}
+.section-head::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* === DROP ZONE === */
+.drop{position:relative;border:1.5px dashed rgba(109,90,255,.25);border-radius:var(--radius);padding:36px 24px;text-align:center;cursor:pointer;transition:all .3s ease;background:var(--surface);overflow:hidden;margin-bottom:16px}
+.drop::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,var(--accent-soft),transparent 70%);opacity:0;transition:opacity .3s}
+.drop:hover,.drop.over{border-color:var(--accent)}
+.drop:hover::before,.drop.over::before{opacity:1}
+.drop input{display:none}
+.drop-inner{position:relative;z-index:1}
+.drop-icon{width:48px;height:48px;margin:0 auto 12px;border-radius:12px;background:var(--accent-soft);display:flex;align-items:center;justify-content:center;transition:transform .3s}
+.drop:hover .drop-icon{transform:translateY(-2px) scale(1.05)}
+.drop-icon svg{width:22px;height:22px;color:var(--accent)}
+.drop h3{font-size:15px;font-weight:600;color:var(--text);margin-bottom:4px}
+.drop p{font-size:12px;color:var(--text-3)}
+.drop-folder-link{color:var(--accent);text-decoration:underline;text-underline-offset:2px;cursor:pointer;transition:color .2s}
+.drop-folder-link:hover{color:#8b7aff}
+
+/* === FILE LIST === */
+.files{margin-bottom:12px;display:grid;gap:5px;max-height:160px;overflow-y:auto}
+.files::-webkit-scrollbar{width:4px}
+.files::-webkit-scrollbar-track{background:transparent}
+.files::-webkit-scrollbar-thumb{background:var(--border-h);border-radius:2px}
+.fi{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:12px;cursor:pointer;transition:all .2s}
+.fi:hover{border-color:var(--border-h)}
+.fi.active{border-color:var(--accent);background:var(--accent-soft)}
+.fi-icon{width:28px;height:28px;border-radius:6px;background:var(--red-soft);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.fi-icon svg{width:14px;height:14px;color:var(--red)}
+.fi-info{flex:1;min-width:0}
+.fi-name{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px}
+.fi-size{font-family:var(--mono);font-size:10px;color:var(--text-3);margin-top:1px}
+.fi-rm{width:24px;height:24px;border-radius:6px;border:none;background:transparent;color:var(--text-3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.fi-rm:hover{background:var(--red-soft);color:var(--red)}
+.fi-rm svg{width:12px;height:12px}
+.file-meta{font-family:var(--mono);font-size:11px;color:var(--text-3);margin-bottom:10px}
+
+/* === PDF PREVIEW === */
+.pdf-preview{width:100%;height:340px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface-2);margin-bottom:16px;overflow:hidden;display:none}
+.pdf-preview iframe{width:100%;height:100%;border:none}
+.pdf-placeholder{width:100%;height:200px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface-2);display:flex;align-items:center;justify-content:center;margin-bottom:16px;color:var(--text-3);font-size:13px}
+
+/* === TEMPLATE SELECT === */
+.template-select{width:100%;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;outline:none;cursor:pointer;transition:border-color .2s;margin-bottom:8px;appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%2371717a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+.template-select:focus{border-color:var(--accent)}
+.template-select option{background:var(--surface-2);color:var(--text)}
+.template-desc{font-size:11px;color:var(--text-3);margin-bottom:12px;min-height:16px;line-height:1.4}
+.template-label{font-size:12px;font-weight:500;color:var(--text-2);margin-bottom:6px}
+
+/* === GPU WIDGET === */
+.gpu-widget{display:flex;align-items:center;gap:10px;padding:4px 10px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;font-size:10px;font-family:var(--mono);color:var(--text-2);white-space:nowrap}
+.gpu-widget .gw-item{display:flex;align-items:center;gap:4px}
+.gpu-widget .gw-bar{width:40px;height:5px;background:var(--surface);border-radius:3px;overflow:hidden;position:relative}
+.gpu-widget .gw-fill{height:100%;border-radius:3px;transition:width .5s}
+.gpu-widget .gw-val{min-width:22px;text-align:right}
+.gpu-widget .gw-lbl{color:var(--text-3)}
+.gpu-widget.hidden{display:none}
+
+/* === ALLOWED TEMPLATES CHECKBOXES === */
+.auto-templates-wrap{margin-bottom:12px;display:none}
+.auto-templates-wrap.show{display:block}
+.auto-templates-header{font-size:11px;color:var(--text-2);margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.auto-templates-header a{font-size:10px;color:var(--accent);cursor:pointer}
+.auto-templates-grid{display:flex;flex-wrap:wrap;gap:6px}
+.auto-tpl-cb{display:flex;align-items:center;gap:4px;padding:4px 8px;background:var(--surface);border:1px solid var(--border);border-radius:6px;font-size:11px;color:var(--text-2);cursor:pointer;transition:all .2s;user-select:none}
+.auto-tpl-cb:hover{border-color:var(--border-h)}
+.auto-tpl-cb input{accent-color:var(--accent)}
+.auto-tpl-cb.checked{border-color:var(--accent);background:var(--accent-soft);color:var(--text)}
+
+/* === PAGE RANGE === */
+.page-range-wrap{margin-bottom:12px}
+.page-range-label{font-size:12px;font-weight:500;color:var(--text-2);margin-bottom:6px}
+.page-range-input{width:100%;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none;transition:border-color .2s}
+.page-range-input:focus{border-color:var(--accent)}
+.page-range-hint{font-size:10px;color:var(--text-3);margin-top:3px}
+.page-range-chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}
+.page-range-chip{font-family:var(--mono);font-size:10px;padding:2px 8px;border-radius:5px;background:var(--surface-2);border:1px solid var(--border);color:var(--text-2);cursor:pointer;transition:all .15s;user-select:none}
+.page-range-chip:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+
+/* === BATCH HISTORY BADGES === */
+.hb-badge{display:inline-block;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:600;margin-left:6px;vertical-align:middle}
+.hb-badge.tpl{background:var(--accent-soft);color:var(--accent)}
+.hb-badge.auto{background:var(--green-soft);color:var(--green)}
+.hb-badge.custom{background:var(--amber-soft);color:var(--amber)}
+
+/* === FIELDS EDITOR === */
+
+/* === TEXTAREA === */
+.prompt-area{width:100%;min-height:80px;max-height:160px;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;resize:vertical;outline:none;transition:border-color .2s;margin-bottom:14px}
+.prompt-area:focus{border-color:var(--accent)}
+.prompt-area::placeholder{color:var(--text-3)}
+.prompt-label{font-size:12px;font-weight:500;color:var(--text-2);margin-bottom:6px}
+
+/* === BUTTONS === */
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px 18px;border:none;border-radius:10px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:all .25s;letter-spacing:-.2px}
+.btn-primary{background:var(--accent);color:#fff;box-shadow:0 0 0 0 var(--accent-glow)}
+.btn-primary:hover:not(:disabled){box-shadow:0 0 24px var(--accent-glow);transform:translateY(-1px)}
+.btn-primary:active:not(:disabled){transform:translateY(0)}
+.btn-primary:disabled{background:var(--surface-2);color:var(--text-3);cursor:not-allowed;box-shadow:none;transform:none}
+.btn-primary svg{width:18px;height:18px}
+
+/* === PROGRESS === */
+.prog{display:none;margin-top:20px}
+.prog-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;overflow:hidden;display:flex;flex-direction:column;max-height:min(600px,calc(100vh - 280px))}
+.prog-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-shrink:0;gap:8px}
+.prog-pct{font-size:28px;font-weight:700;letter-spacing:-1px;font-variant-numeric:tabular-nums;
+  background:linear-gradient(135deg,var(--accent),var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;flex-shrink:0}
+.prog-lbl{font-size:12px;color:var(--text-2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.prog-meta{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px 14px;margin:0 0 10px;flex-shrink:0}
+.prog-meta-item{font-family:var(--mono);font-size:10px;color:var(--text-3)}
+.prog-bar{width:100%;height:3px;background:var(--surface-2);border-radius:2px;overflow:hidden;margin-bottom:14px;flex-shrink:0}
+.prog-fill{height:100%;width:0%;border-radius:2px;background:linear-gradient(90deg,var(--accent),var(--cyan));transition:width .6s cubic-bezier(.4,0,.2,1)}
+.prog-files{display:grid;gap:4px;overflow-y:auto;flex:1;min-height:80px}
+.prog-first-result-btn{display:none;align-items:center;gap:5px;padding:4px 10px;border-radius:7px;border:1px solid rgba(34,197,94,.3);background:var(--green-soft);color:var(--green);font-family:inherit;font-size:10px;font-weight:700;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0;animation:fadeSlideIn .3s ease}
+.prog-first-result-btn:hover{background:var(--green);color:#fff}
+.prog-first-result-btn.visible{display:flex}
+.prog-files::-webkit-scrollbar{width:4px}
+.prog-files::-webkit-scrollbar-track{background:transparent}
+.prog-files::-webkit-scrollbar-thumb{background:var(--border-h);border-radius:2px}
+.pf{display:flex;align-items:flex-start;gap:8px;padding:7px 10px;border-radius:6px;background:var(--surface-2);font-size:11px;transition:background .2s}
+.pf.clickable{cursor:pointer}
+.pf.clickable:hover{background:var(--surface)}
+.pf-indicator{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.pf-indicator.s-pending{background:var(--text-3)}
+.pf-indicator.s-uploaded{background:var(--text-3)}
+.pf-indicator.s-queued{background:var(--text-3)}
+.pf-indicator.s-converting,.pf-indicator.s-processing{background:var(--amber);box-shadow:0 0 8px var(--amber);animation:pulse 1.5s infinite}
+.pf-indicator.s-done{background:var(--green);box-shadow:0 0 6px rgba(34,197,94,.3)}
+.pf-indicator.s-error{background:var(--red)}
+.pf-indicator.s-interrupted{background:var(--amber)}
+.pf-json-badge{font-size:9px;font-weight:600;color:var(--green);background:var(--green-soft);padding:1px 5px;border-radius:3px;margin-left:4px}
+@keyframes result-highlight{0%{box-shadow:0 0 0 2px var(--accent)}100%{box-shadow:none}}
+.page-result-card.highlight{animation:result-highlight 1.5s ease-out}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.pf-main{flex:1;min-width:0}
+.pf-row{display:flex;align-items:center;gap:8px}
+.pf-name{flex:1;color:var(--text-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pf-cnt{font-family:var(--mono);font-size:10px;color:var(--text-3);flex-shrink:0}
+.pf-sub{margin-top:2px;font-size:10px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pf-sub.error{color:var(--red)}
+.pf-template{font-size:11px;color:var(--accent);font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.err{display:none;padding:10px 14px;background:var(--red-soft);border:1px solid rgba(239,68,68,.15);border-radius:8px;font-size:12px;color:var(--red);margin-top:12px}
+
+/* === UPLOAD PROGRESS (chunked) === */
+.upload-prog{display:none;margin-bottom:14px}
+.upload-prog-inner{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:12px 14px}
+.upload-prog-text{font-size:12px;color:var(--text-2);margin-bottom:8px;display:flex;justify-content:space-between}
+.upload-prog-bar{width:100%;height:3px;background:var(--surface-2);border-radius:2px;overflow:hidden}
+.upload-prog-fill{height:100%;width:0%;border-radius:2px;background:linear-gradient(90deg,var(--green),var(--cyan));transition:width .3s ease}
+
+/* === BATCH HISTORY === */
+.history{margin-top:24px}
+.history-list{display:grid;gap:6px;max-height:240px;overflow-y:auto}
+.history-list::-webkit-scrollbar{width:4px}
+.history-list::-webkit-scrollbar-track{background:transparent}
+.history-list::-webkit-scrollbar-thumb{background:var(--border-h);border-radius:2px}
+.hb{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:12px;cursor:pointer;transition:all .2s}
+.hb:hover{border-color:var(--border-h);background:var(--surface-2)}
+.hb-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.hb-dot.st-done{background:var(--green);box-shadow:0 0 6px rgba(34,197,94,.3)}
+.hb-dot.st-processing,.hb-dot.st-uploading{background:var(--amber);box-shadow:0 0 8px var(--amber);animation:pulse 1.5s infinite}
+.hb-dot.st-interrupted{background:var(--amber)}
+.hb-dot.st-error{background:var(--red)}
+.hb-info{flex:1;min-width:0}
+.hb-id{font-family:var(--mono);font-weight:500;color:var(--text)}
+.hb-meta{font-size:10px;color:var(--text-3);margin-top:2px}
+.hb-status{font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:5px;flex-shrink:0}
+.hb-status.st-done{background:var(--green-soft);color:var(--green)}
+.hb-status.st-processing,.hb-status.st-uploading{background:var(--amber-soft);color:var(--amber)}
+.hb-status.st-interrupted{background:var(--amber-soft);color:var(--amber)}
+.hb-status.st-error{background:var(--red-soft);color:var(--red)}
+.hb-actions{display:flex;gap:4px;flex-shrink:0}
+.hb-btn{font-family:inherit;font-size:10px;font-weight:600;padding:4px 10px;border-radius:5px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-2);cursor:pointer;transition:all .2s;white-space:nowrap}
+.hb-btn:hover{border-color:var(--accent);color:var(--accent)}
+.hb-btn.resume{border-color:rgba(34,197,94,.3);color:var(--green)}
+.hb-btn.resume:hover{background:var(--green-soft)}
+.hb-btn.del{border-color:rgba(239,68,68,.2);color:var(--text-3)}
+.hb-btn.del:hover{border-color:rgba(239,68,68,.4);color:var(--red);background:var(--red-soft)}
+
+/* === RIGHT PANEL: JSON FEED === */
+.right-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text-3);gap:12px;text-align:center}
+.right-empty svg{width:48px;height:48px;opacity:.3}
+.right-empty p{font-size:14px}
+.right-empty small{font-size:11px;color:var(--text-3);max-width:280px;line-height:1.5}
+
+.right-content{display:none;height:100%;flex-direction:column}
+.right-header{display:flex;align-items:center;justify-content:space-between;padding-bottom:16px;flex-shrink:0;flex-wrap:wrap;gap:8px}
+.right-title{font-size:14px;font-weight:600;color:var(--text)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font-family:var(--mono);font-size:10px;padding:3px 8px;border-radius:5px;background:var(--surface-2);border:1px solid var(--border);color:var(--text-2);white-space:nowrap}
+.chip b{color:var(--text);margin-right:3px}
+
+.results-feed{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin-bottom:16px;padding-right:4px}
+.results-feed::-webkit-scrollbar{width:5px}
+.results-feed::-webkit-scrollbar-track{background:transparent}
+.results-feed::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:3px}
+
+.page-result-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;overflow:visible;flex-shrink:0;animation:fadeSlideIn .3s ease}
+@keyframes fadeSlideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+.page-result-header{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border)}
+
+.page-result-header .pr-filename{font-size:12px;font-weight:500;color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.page-result-header .pr-page{font-family:var(--mono);font-size:10px;color:var(--text-2);flex-shrink:0}
+.page-result-header .pr-duration{font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:4px;background:var(--accent-soft);color:var(--accent);flex-shrink:0}
+.page-result-body{padding:10px 14px 12px}
+
+.page-result-json{background:var(--surface-2);border-radius:8px;padding:12px;font-family:var(--mono);font-size:11px;line-height:1.5;overflow-x:auto;white-space:pre-wrap;word-break:break-word}
+.page-result-json::-webkit-scrollbar{width:4px;height:4px}
+.page-result-json::-webkit-scrollbar-track{background:transparent}
+.page-result-json::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:2px}
+.json-key{color:#7dd3fc}
+.json-str{color:#86efac}
+.json-num{color:#fbbf24}
+.json-null{color:#71717a;font-style:italic}
+.json-bool{color:#c084fc}
+
+.results-counter{font-family:var(--mono);font-size:11px;color:var(--text-3)}
+
+.btn-dl{background:var(--green);color:#fff;font-size:14px;padding:14px 20px;border-radius:12px;box-shadow:0 4px 24px rgba(34,197,94,.18);gap:8px;flex-shrink:0}
+.btn-dl:hover{box-shadow:0 6px 32px rgba(34,197,94,.25);transform:translateY(-1px)}
+.btn-dl svg{width:18px;height:18px}
+
+/* === FOOTER === */
+.foot{position:relative;z-index:1;text-align:center;padding:12px 0;font-size:10px;color:var(--text-3);border-top:1px solid var(--border)}
+.foot span{font-family:var(--mono)}
+
+/* === SCROLLBAR === */
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.12)}
+
+
+/* === CLEAR QUEUE === */
+.btn-clear{display:none;align-items:center;gap:6px;padding:6px 14px;border:1px solid rgba(239,68,68,.2);border-radius:8px;background:transparent;color:var(--text-3);font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-clear:hover{border-color:rgba(239,68,68,.4);color:var(--red);background:var(--red-soft)}
+.btn-clear svg{width:12px;height:12px}
+
+/* === STOP BUTTON === */
+.btn-stop{display:none;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px 18px;border:2px solid var(--red);border-radius:10px;background:var(--red-soft);color:var(--red);font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:all .25s;letter-spacing:-.2px;margin-top:10px}
+.btn-stop:hover{background:var(--red);color:#fff}
+.btn-stop svg{width:18px;height:18px}
+
+/* === BATCH TARGET === */
+.batch-target{margin-bottom:12px;display:none}
+.batch-target-label{font-size:12px;font-weight:500;color:var(--text-2);margin-bottom:6px}
+.batch-target-select{width:100%;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;outline:none;cursor:pointer;transition:border-color .2s;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%2371717a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+.batch-target-select:focus{border-color:var(--accent)}
+.batch-target-select option{background:var(--surface-2);color:var(--text)}
+
+/* === FILE META ROW === */
+.file-meta-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+
+/* === RESPONSIVE === */
+@media(max-width:900px){
+  .panels{grid-template-columns:1fr;height:auto}
+  .panel-left{border-right:none;border-bottom:1px solid var(--border)}
+  .panel{padding:16px}
+  .pdf-preview{height:260px}
+  .nav-badge{display:none}
+  .nav-right{gap:8px}
+  .nav-tabs{gap:6px}
+  .nav-tab{padding:9px 12px;font-size:12px}
+  .prompts-view{height:auto;padding:14px}
+  .prompts-shell{grid-template-columns:1fr}
+  .prompt-editor{min-height:320px}
+  .prompts-footer{flex-direction:column;align-items:stretch}
+}
+
+/* === CHAT VIEW === */
+.chat-view{display:none;position:relative;z-index:1;height:calc(100vh - 65px);overflow:hidden}
+.chat-layout{display:grid;grid-template-columns:380px 1fr;height:100%;overflow:hidden}
+.chat-sidebar{border-right:1px solid var(--border);background:var(--bg);overflow-y:auto;padding:20px}
+.chat-sidebar::-webkit-scrollbar{width:5px}
+.chat-sidebar::-webkit-scrollbar-track{background:transparent}
+.chat-sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:3px}
+
+.chat-doc-select{width:100%;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;font-size:13px;outline:none;cursor:pointer;transition:border-color .2s;margin-bottom:12px;appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%2371717a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+.chat-doc-select:focus{border-color:var(--accent)}
+.chat-doc-select option{background:var(--surface-2);color:var(--text)}
+
+.chat-upload-zone{position:relative;border:1.5px dashed rgba(109,90,255,.25);border-radius:10px;padding:16px;text-align:center;cursor:pointer;transition:all .3s;background:var(--surface);margin-bottom:16px}
+.chat-upload-zone:hover{border-color:var(--accent)}
+.chat-upload-zone input{display:none}
+.chat-upload-zone p{font-size:12px;color:var(--text-3)}
+.chat-upload-zone .cuz-icon{font-size:20px;margin-bottom:4px}
+
+.chat-page-preview{width:100%;aspect-ratio:210/297;border-radius:10px;border:1px solid var(--border);background:var(--surface-2);overflow:hidden;margin-bottom:12px;display:flex;align-items:center;justify-content:center}
+.chat-page-preview img{width:100%;height:100%;object-fit:contain}
+.chat-page-preview .cpp-empty{font-size:12px;color:var(--text-3);text-align:center;padding:20px}
+
+.chat-page-nav{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:16px}
+.chat-page-nav button{width:32px;height:32px;border-radius:8px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-2);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.chat-page-nav button:hover:not(:disabled){border-color:var(--accent);color:var(--accent)}
+.chat-page-nav button:disabled{opacity:.3;cursor:not-allowed}
+.chat-page-nav .cpn-label{font-family:var(--mono);font-size:12px;color:var(--text-2);min-width:60px;text-align:center}
+
+.chat-doc-info{font-size:11px;color:var(--text-3);margin-bottom:12px;font-family:var(--mono)}
+
+.chat-main{display:flex;flex-direction:column;height:100%;background:var(--surface);overflow:hidden}
+.chat-messages{flex:1;overflow-y:auto;padding:24px;display:flex;flex-direction:column;gap:12px}
+.chat-messages::-webkit-scrollbar{width:5px}
+.chat-messages::-webkit-scrollbar-track{background:transparent}
+.chat-messages::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08);border-radius:3px}
+
+.chat-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--text-3);gap:12px;text-align:center;padding:40px}
+.chat-empty svg{width:48px;height:48px;opacity:.25}
+.chat-empty p{font-size:14px}
+.chat-empty small{font-size:11px;max-width:300px;line-height:1.5}
+
+.chat-msg{max-width:85%;padding:12px 16px;border-radius:14px;font-size:13px;line-height:1.6;word-wrap:break-word;white-space:pre-wrap;animation:fadeSlideIn .25s ease}
+.chat-msg.user{align-self:flex-end;background:var(--accent);color:#fff;border-bottom-right-radius:4px}
+.chat-msg.assistant{align-self:flex-start;background:var(--bg);border:1px solid var(--border);color:var(--text);border-bottom-left-radius:4px}
+.chat-msg.assistant .typing-cursor{display:inline-block;width:2px;height:14px;background:var(--accent);margin-left:2px;animation:blink 1s infinite}
+@keyframes blink{0%,50%{opacity:1}51%,100%{opacity:0}}
+.chat-msg.error{align-self:center;background:var(--red-soft);border:1px solid rgba(239,68,68,.2);color:var(--red);font-size:12px;max-width:90%}
+
+.chat-input-area{padding:16px 24px;border-top:1px solid var(--border);background:var(--bg);flex-shrink:0}
+.chat-input-wrap{display:flex;gap:10px;align-items:flex-end;max-width:100%}
+.chat-input{flex:1;min-height:42px;max-height:140px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:12px;color:var(--text);font-family:inherit;font-size:13px;resize:none;outline:none;transition:border-color .2s;line-height:1.5}
+.chat-input:focus{border-color:var(--accent)}
+.chat-input::placeholder{color:var(--text-3)}
+.chat-input:disabled{opacity:.5}
+.chat-send-btn{width:42px;height:42px;border-radius:10px;border:none;background:var(--accent);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.chat-send-btn:hover:not(:disabled){box-shadow:0 0 16px var(--accent-glow);transform:translateY(-1px)}
+.chat-send-btn:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+.chat-send-btn svg{width:18px;height:18px}
+.chat-attach-btn{width:42px;height:42px;border-radius:10px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+.chat-attach-btn:hover{border-color:var(--accent);color:var(--accent)}
+.chat-attach-btn svg{width:18px;height:18px}
+.chat-attach-preview{display:flex;gap:8px;flex-wrap:wrap;padding:4px 0 8px}
+.chat-attach-thumb{position:relative;width:60px;height:60px;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
+.chat-attach-thumb img{width:100%;height:100%;object-fit:cover}
+.chat-attach-thumb .cat-remove{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.7);color:#fff;border:none;cursor:pointer;font-size:11px;display:flex;align-items:center;justify-content:center;line-height:1}
+.chat-attach-thumb .cat-pdf{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:var(--surface);font-size:10px;color:var(--text-3)}
+.chat-msg-images{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.chat-msg-images img{max-width:120px;max-height:120px;border-radius:6px;border:1px solid rgba(255,255,255,.1)}
+.chat-msg-images .cmi-pdf{padding:4px 8px;background:rgba(255,255,255,.1);border-radius:4px;font-size:11px}
+.chat-drop-overlay{position:absolute;inset:0;background:rgba(109,90,255,.08);border:2px dashed var(--accent);border-radius:12px;display:none;align-items:center;justify-content:center;z-index:10;pointer-events:none}
+.chat-drop-overlay.active{display:flex}
+.chat-drop-overlay span{color:var(--accent);font-size:13px;font-weight:600}
+.chat-input-hint{font-size:10px;color:var(--text-3);margin-top:6px;text-align:right}
+
+@media(max-width:900px){
+  .chat-layout{grid-template-columns:1fr;height:auto}
+  .chat-sidebar{border-right:none;border-bottom:1px solid var(--border);max-height:40vh;padding:14px}
+  .chat-page-preview{aspect-ratio:auto;height:200px}
+  .chat-view{height:auto;min-height:calc(100vh - 65px)}
+}
+
+.model-select-wrap select:focus{border-color:var(--accent)}
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav class="nav">
+  <div class="nav-brand">
+    <div class="nav-mark">
+      <svg fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+    </div>
+    <span class="nav-name">Распознавание Архивариус</span>
+  </div>
+  <div class="nav-right">
+    <div class="nav-tabs">
+      <button class="nav-tab active" id="tabScanBtn">Загрузка</button>
+      <button class="nav-tab" id="tabPromptsBtn">Промпты</button>
+      <button class="nav-tab" id="tabChatBtn">Чат</button>
+      <button class="nav-tab" id="tabOcrBtn">Распознавание текста</button>
+    </div>
+    <span class="nav-badge" id="navBadge">Qwen3-VL-8B</span>
+    <div id="modelCtrl" style="display:flex;align-items:center;gap:8px">
+      <select id="modelSelect" title="Выбор модели" style="font-family:var(--mono);font-size:11px;font-weight:600;padding:4px 8px;border:1px solid var(--border);border-radius:6px;background:var(--surface-2);color:var(--text-2);cursor:pointer;outline:none;max-width:160px;transition:border-color .2s" onchange="onModelSelectChange(this.value)"><option value="">Загрузка...</option></select>
+      <div id="modelDot" style="width:8px;height:8px;border-radius:50%;background:var(--text-3);transition:all .3s"></div>
+      <span id="modelLabel" style="font-size:11px;color:var(--text-3);font-family:var(--mono)">...</span>
+      <button id="modelBtn" onclick="toggleModel()" style="font-family:inherit;font-size:11px;font-weight:600;padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-2);cursor:pointer;transition:all .2s;white-space:nowrap">...</button>
+    </div>
+    <div class="concurrency-ctrl" id="concurrencyCtrl" style="display:flex;align-items:center;gap:6px;padding:3px 10px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;font-size:10px;font-family:var(--mono);color:var(--text-2)">
+      <span style="color:var(--text-3)">Парал.</span>
+      <input type="number" id="concurrencyInput" min="1" max="8" value="2" style="width:36px;padding:2px 4px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text);font-family:var(--mono);font-size:11px;font-weight:600;text-align:center;-moz-appearance:textfield" onwheel="this.blur()">
+      <button id="concurrencyBtn" style="padding:2px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--text-2);font-family:var(--mono);font-size:10px;cursor:pointer;transition:all .2s">OK</button>
+      <span id="concurrencyMsg" style="font-size:9px;opacity:0;transition:opacity .3s"></span>
+    </div>
+    <div class="gpu-widget hidden" id="gpuWidget">
+      <div class="gw-item"><span class="gw-lbl">VRAM</span><div class="gw-bar"><div class="gw-fill" id="gpuVramFill" style="width:0;background:var(--accent)"></div></div><span class="gw-val" id="gpuVramText">—</span></div>
+      <div class="gw-item"><span class="gw-lbl">GPU</span><span class="gw-val" id="gpuUtilText">—</span></div>
+      <div class="gw-item"><span class="gw-lbl">T</span><span class="gw-val" id="gpuTempText">—</span></div>
+    </div>
+  </div>
+</nav>
+
+<div class="panels" id="mainPanels">
+  <!-- ====== LEFT PANEL ====== -->
+  <div class="panel panel-left">
+    <div class="section-head">Загрузка PDF</div>
+
+    <div class="drop" id="dropZone">
+      <input type="file" id="fileInput" multiple accept=".pdf">
+      <input type="file" id="folderInput" webkitdirectory multiple style="display:none">
+      <div class="drop-inner">
+        <div class="drop-icon">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 16V4m0 0l-4 4m4-4l4 4M4 14v4a2 2 0 002 2h12a2 2 0 002-2v-4"/></svg>
+        </div>
+        <h3>Перетащите PDF или папку сюда</h3>
+        <p>нажмите для выбора файлов или <a href="#" class="drop-folder-link" id="folderPickBtn">выберите папку</a></p>
+      </div>
+    </div>
+
+    <div class="file-meta-row">
+      <div class="file-meta" id="fileMeta"></div>
+      <button class="btn-clear" id="clearBtn" onclick="clearQueue()">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+        Очистить
+      </button>
+    </div>
+    <div class="files" id="fileList"></div>
+
+    <!-- PDF Preview -->
+    <div class="pdf-preview" id="pdfPreview">
+      <iframe id="pdfFrame"></iframe>
+    </div>
+
+    <!-- Template select -->
+    <div class="template-label">Тип документа</div>
+    <select class="template-select" id="templateSelect">
+      <option value="">Автоопределение (по библиотеке промптов)</option>
+    </select>
+    <div class="template-desc" id="templateDesc"></div>
+
+    <!-- Allowed templates for auto-mode -->
+    <div class="auto-templates-wrap" id="autoTemplatesWrap">
+      <div class="auto-templates-header">
+        Шаблоны для автоопределения
+        <a id="autoTplToggleAll">все/ничего</a>
+      </div>
+      <div class="auto-templates-grid" id="autoTemplatesGrid"></div>
+    </div>
+
+    <!-- Page range -->
+    <div class="page-range-wrap">
+      <div class="page-range-label">Страницы для обработки</div>
+      <input class="page-range-input" id="pageRangeInput" placeholder="все страницы" autocomplete="off">
+      <div class="page-range-chips">
+        <span class="page-range-chip" data-val="" title="Все страницы">все</span>
+        <span class="page-range-chip" data-val="1" title="Только первая страница">1</span>
+        <span class="page-range-chip" data-val="last" title="Только последняя страница">last</span>
+        <span class="page-range-chip" data-val="1,last" title="Первая и последняя">1,last</span>
+        <span class="page-range-chip" data-val="1-3" title="Страницы 1–3">1-3</span>
+        <span class="page-range-chip" data-val="1-5" title="Страницы 1–5">1-5</span>
+      </div>
+      <div class="page-range-hint">Формат: 1,3-5,last · пусто = все страницы</div>
+    </div>
+
+    <!-- Custom prompt -->
+    <div class="prompt-label">Дополнительные инструкции (необязательно)</div>
+    <textarea class="prompt-area" id="customPrompt" placeholder="Оставьте пусто для стандартного извлечения по шаблону. Или укажите свои поля: &laquo;Извлеки номер договора, дату, ИНН контрагентов, сумму с НДС&raquo;"></textarea>
+
+    <div class="batch-target" id="batchTarget">
+      <div class="batch-target-label">Добавить в пакет</div>
+      <select class="batch-target-select" id="batchTargetSelect">
+        <option value="new">Новый пакет</option>
+      </select>
+    </div>
+
+    <button class="btn btn-primary" id="uploadBtn" disabled>
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      Обработать документы
+    </button>
+    <div class="err" id="errMsg"></div>
+
+    <button class="btn btn-stop" id="stopBtn" onclick="stopBatch()">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/></svg>
+      Остановить обработку
+    </button>
+
+    <!-- Upload progress (chunked) -->
+    <div class="upload-prog" id="uploadProg">
+      <div class="upload-prog-inner">
+        <div class="upload-prog-text">
+          <span id="uploadProgLabel">Загрузка файлов...</span>
+          <span id="uploadProgCount">0 / 0</span>
+        </div>
+        <div class="upload-prog-bar"><div class="upload-prog-fill" id="uploadProgFill"></div></div>
+      </div>
+    </div>
+
+    <!-- Processing progress -->
+    <div class="prog" id="progWrap">
+      <div class="prog-card">
+        <div class="prog-top">
+          <span class="prog-pct" id="progPct">0%</span>
+          <span class="prog-lbl" id="progLbl">Подготовка...</span>
+          <button class="prog-first-result-btn" id="progFirstResultBtn" onclick="scrollToFirstResult()">↓ Результаты готовы</button>
+        </div>
+        <div class="prog-meta">
+          <span class="prog-meta-item" id="progBatchTimer">Время пакета: --</span>
+          <span class="prog-meta-item" id="progPageTime">Время на 1 док.: --</span>
+          <span class="prog-meta-item" id="progDoneFiles">Файлы: 0 / 0</span>
+        </div>
+        <div class="prog-bar"><div class="prog-fill" id="progFill"></div></div>
+        <div class="prog-files" id="progFiles"></div>
+      </div>
+    </div>
+
+    <!-- Batch history -->
+    <div class="history" id="historySection">
+      <div class="section-head">История обработок</div>
+      <div class="history-list" id="historyList"></div>
+    </div>
+  </div>
+
+  <!-- ====== RIGHT PANEL ====== -->
+  <div class="panel panel-right">
+    <div class="right-empty" id="rightEmpty">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M3 6h18M3 14h18M3 18h18"/></svg>
+      <p>Результаты появятся здесь</p>
+      <small>Загрузите PDF-файлы слева и нажмите &laquo;Обработать&raquo; — результаты каждой страницы появятся здесь в реальном времени</small>
+    </div>
+    <div class="right-content" id="rightContent">
+      <div class="right-header">
+        <span class="right-title" id="resTitle"></span>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span class="results-counter" id="resultsCounter"></span>
+          <div class="chips" id="resChips"></div>
+        </div>
+      </div>
+      <div class="results-feed" id="resultsFeed"></div>
+      <button class="btn btn-dl" id="dlBtn" onclick="generateAndDownload()" style="display:none">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v12m0 0l-4-4m4 4l4-4M4 18h16"/></svg>
+        Экспорт в Excel
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="prompts-view" id="promptsView">
+  <div class="prompts-shell">
+    <div class="prompts-side">
+      <div class="prompt-subtabs" id="promptSubtabs">
+        <button class="prompt-subtab active" data-sub="docs">Типы документов</button>
+        <button class="prompt-subtab" data-sub="ocr">OCR режимы</button>
+      </div>
+      <div id="promptDocsPanel">
+        <div class="section-head prompts-side-head">Типы Документов</div>
+        <select class="template-select" id="promptDocSelect">
+          <option value="">Выберите тип документа</option>
+        </select>
+        <div class="prompts-actions">
+          <button class="pm-btn primary" id="newPromptBtn">Добавить промпт</button>
+          <button class="pm-btn danger" id="deletePromptBtn" disabled>Удалить</button>
+        </div>
+        <div class="prompts-note" id="promptModeNote">
+          Редактируйте системный промпт выбранного типа документа или создайте новый тип.
+        </div>
+      </div>
+      <div id="promptOcrPanel" style="display:none">
+        <div class="section-head prompts-side-head">OCR режимы</div>
+        <select class="template-select" id="ocrHintSelect">
+          <option value="">Загрузка...</option>
+        </select>
+        <div class="prompts-note" id="ocrHintNote" style="margin-top:10px">
+          Редактируйте хинты OCR-режимов. Они добавляются к системному промпту при распознавании.
+        </div>
+      </div>
+    </div>
+
+    <div class="prompts-editor">
+      <div id="editorDocsPanel">
+        <div class="prompt-label">Название типа документа</div>
+        <input type="text" class="prompt-input" id="promptDocName" placeholder="Например: КС-2">
+
+        <div class="prompt-label">Описание (необязательно)</div>
+        <input type="text" class="prompt-input" id="promptDocDesc" placeholder="Кратко опишите шаблон">
+
+        <div class="prompt-label">Системный промпт</div>
+        <textarea class="prompt-editor" id="systemPromptEditor" placeholder="Введите системный промпт для выбранного типа документа..."></textarea>
+
+        <div class="prompt-label" style="margin-top:10px">Страницы</div>
+        <input type="text" class="prompt-input" id="promptPageRange" placeholder="Все стр. Формат: 1,3-5,last">
+
+        <div class="prompts-footer">
+          <div class="prompt-status" id="promptStatus"></div>
+          <button class="pm-btn primary" id="savePromptBtn">Сохранить промпт</button>
+        </div>
+      </div>
+      <div id="editorOcrPanel" style="display:none">
+        <div class="prompt-label">Название режима</div>
+        <input type="text" class="prompt-input" id="ocrHintName" placeholder="Название OCR-режима">
+
+        <div class="prompt-label">Описание</div>
+        <input type="text" class="prompt-input" id="ocrHintDesc" placeholder="Краткое описание режима">
+
+        <div class="prompt-label">Хинт к промпту</div>
+        <textarea class="prompt-editor" id="ocrHintEditor" style="min-height:260px" placeholder="Текст, добавляемый к системному OCR-промпту для этого режима..."></textarea>
+
+        <div class="prompts-footer">
+          <div class="prompt-status" id="ocrHintStatus"></div>
+          <button class="pm-btn primary" id="saveOcrHintBtn">Сохранить</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<div class="ocr-view" id="ocrView">
+  <div class="ocr-shell">
+    <div class="section-head">Распознавание текста</div>
+    <p style="font-size:13px;color:var(--text-2);margin-bottom:16px;line-height:1.6">
+      Загрузите PDF-сканы — система распознает текст через Qwen3-VL.
+      Результат: распознанный текст + теги документа.
+      При необходимости можно создать PDF с наложенным невидимым текстовым слоем.
+    </p>
+
+    <div class="ocr-drop" id="ocrDropZone">
+      <input type="file" id="ocrFileInput" multiple accept=".pdf">
+      <div style="position:relative;z-index:1">
+        <div style="width:48px;height:48px;margin:0 auto 12px;border-radius:12px;background:var(--accent-soft);display:flex;align-items:center;justify-content:center">
+          <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8" style="color:var(--accent)"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9l-5-5H7a2 2 0 00-2 2v12a2 2 0 002 2z"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 3v4a2 2 0 002 2h4"/></svg>
+        </div>
+        <div style="font-size:14px;font-weight:600;margin-bottom:6px">Перетащите PDF-файлы сюда</div>
+        <div style="font-size:12px;color:var(--text-3)">или нажмите для выбора</div>
+      </div>
+    </div>
+
+    <div class="ocr-file-list" id="ocrFileList"></div>
+
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap">
+      <select class="ocr-mode-select" id="ocrModeSelect">
+        <option value="universal" selected>Универсальный</option>
+        <option value="text">Текст (печатный)</option>
+        <option value="table">Таблица</option>
+        <option value="handwritten">Рукописный</option>
+      </select>
+      <button class="ocr-dl-btn primary" id="ocrStartBtn" disabled>Распознать</button>
+      <button class="ocr-dl-btn" id="ocrClearBtn" style="display:none">Очистить</button>
+    </div>
+
+    <div class="ocr-progress" id="ocrProgress" style="display:none">
+      <div class="ocr-progress-text" id="ocrProgressText">Подготовка...</div>
+      <div class="ocr-progress-bar"><div class="ocr-progress-fill" id="ocrProgressFill" style="width:0"></div></div>
+    </div>
+
+    <div class="ocr-results" id="ocrResults" style="display:none">
+      <div class="section-head">Результаты</div>
+      <div id="ocrResultsList"></div>
+      <button class="ocr-dl-btn primary" id="ocrOverlayBtn" style="display:none;margin-top:12px;padding:12px 28px;font-size:15px;font-weight:700;letter-spacing:.3px">Наложить текст на PDF</button>
+
+      <!-- Preview: scan vs recognized text -->
+      <div id="ocrPreview" style="display:none;margin-top:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+          <div class="section-head" style="margin:0">Предпросмотр</div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <select id="ocrPreviewFile" class="template-select" style="width:auto;min-width:200px;padding:6px 10px;font-size:12px"></select>
+            <button class="ocr-dl-btn" id="ocrPrevPage" style="padding:4px 10px">&larr;</button>
+            <span id="ocrPageLabel" style="font-family:var(--mono);font-size:12px;color:var(--text-2);min-width:70px;text-align:center">1 / 1</span>
+            <button class="ocr-dl-btn" id="ocrNextPage" style="padding:4px 10px">&rarr;</button>
+          </div>
+        </div>
+        <div class="ocr-preview-wrap">
+          <!-- Column 1: Scan -->
+          <div>
+            <div class="ocr-preview-label">Оригинал (скан)</div>
+            <img id="ocrPreviewImg" src="" style="width:100%;border:1px solid var(--border);border-radius:10px;background:var(--bg);min-height:300px">
+          </div>
+          <!-- Column 2: Recognized text -->
+          <div>
+            <div class="ocr-preview-label">Распознанный текст</div>
+            <div id="ocrPreviewText" class="ocr-rendered-text"></div>
+          </div>
+          <!-- Column 3: Tags -->
+          <div class="ocr-tags-col" id="ocrTagsPanel">
+            <div class="ocr-preview-label">Теги документа</div>
+            <div class="ocr-tags-section">
+              <div class="ocr-tags-section-title">Названия (ФИО, организации)</div>
+              <div class="ocr-tag-list" id="ocrTagsNames"></div>
+            </div>
+            <div class="ocr-tags-section">
+              <div class="ocr-tags-section-title">Даты</div>
+              <div class="ocr-tag-list" id="ocrTagsDates"></div>
+            </div>
+            <div class="ocr-tags-section">
+              <div class="ocr-tags-section-title">Документы (номера, ГОСТы)</div>
+              <div class="ocr-tag-list" id="ocrTagsDocuments"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="chat-view" id="chatView">
+  <div class="chat-layout">
+    <!-- Chat sidebar -->
+    <div class="chat-sidebar">
+      <div class="section-head">Документ</div>
+
+      <select class="chat-doc-select" id="chatDocSelect">
+        <option value="">Выберите документ...</option>
+      </select>
+
+      <div class="chat-upload-zone" id="chatUploadZone">
+        <input type="file" id="chatFileInput" accept=".pdf">
+        <div class="cuz-icon">&#128196;</div>
+        <p>или загрузите PDF</p>
+      </div>
+
+      <div class="chat-doc-info" id="chatDocInfo"></div>
+
+      <div class="chat-page-preview" id="chatPagePreview">
+        <div class="cpp-empty">Выберите документ для начала</div>
+      </div>
+
+      <div class="chat-page-nav" id="chatPageNav" style="display:none">
+        <button id="chatPrevPage" title="Предыдущая">&larr;</button>
+        <span class="cpn-label" id="chatPageLabel">1 / 1</span>
+        <button id="chatNextPage" title="Следующая">&rarr;</button>
+      </div>
+    </div>
+
+    <!-- Chat main -->
+    <div class="chat-main">
+      <div class="chat-messages" id="chatMessages">
+        <div class="chat-empty" id="chatEmpty">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+          <p>Чат с ассистентом</p>
+          <small>Задавайте вопросы, прикрепляйте изображения или выберите документ слева для контекста.</small>
+        </div>
+      </div>
+      <div class="chat-input-area" id="chatInputArea" style="position:relative">
+        <div class="chat-drop-overlay" id="chatDropOverlay"><span>Перетащите изображения сюда</span></div>
+        <div class="chat-attach-preview" id="chatAttachPreview" style="display:none"></div>
+        <div class="chat-input-wrap">
+          <button class="chat-attach-btn" id="chatAttachBtn" title="Прикрепить изображение или PDF">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/></svg>
+          </button>
+          <input type="file" id="chatAttachInput" multiple accept="image/png,image/jpeg,image/webp,application/pdf" style="display:none">
+          <textarea class="chat-input" id="chatInput" placeholder="Введите сообщение..." rows="1"></textarea>
+          <button class="chat-send-btn" id="chatSendBtn" disabled title="Отправить">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19V5m0 0l-7 7m7-7l7 7"/></svg>
+          </button>
+        </div>
+        <div class="chat-input-hint">Enter — отправить, Shift+Enter — перенос. Можно вставить изображение (Ctrl+V)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="foot">
+  <span>Архивариус</span> &middot; Qwen3-VL-8B-Instruct-AWQ &middot; GPU
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+
+const mainPanels=$('mainPanels'), promptsView=$('promptsView'), chatView=$('chatView'), ocrView=$('ocrView'),
+      tabScanBtn=$('tabScanBtn'), tabPromptsBtn=$('tabPromptsBtn'), tabChatBtn=$('tabChatBtn'), tabOcrBtn=$('tabOcrBtn'),
+      promptDocSelect=$('promptDocSelect'), promptDocName=$('promptDocName'),
+      promptDocDesc=$('promptDocDesc'), systemPromptEditor=$('systemPromptEditor'),
+      promptPageRange=$('promptPageRange'),
+      savePromptBtn=$('savePromptBtn'), newPromptBtn=$('newPromptBtn'),
+      deletePromptBtn=$('deletePromptBtn'), promptStatus=$('promptStatus'),
+      promptModeNote=$('promptModeNote');
+
+const dropZone=$('dropZone'), fileInput=$('fileInput'), folderInput=$('folderInput'),
+      folderPickBtn=$('folderPickBtn'), fileList=$('fileList'),
+      fileMeta=$('fileMeta'), uploadBtn=$('uploadBtn'), customPrompt=$('customPrompt'),
+      templateSelect=$('templateSelect'), templateDesc=$('templateDesc'),
+      pdfPreview=$('pdfPreview'), pdfFrame=$('pdfFrame'),
+      uploadProg=$('uploadProg'), uploadProgLabel=$('uploadProgLabel'),
+      uploadProgCount=$('uploadProgCount'), uploadProgFill=$('uploadProgFill'),
+      clearBtn=$('clearBtn'), stopBtn=$('stopBtn'),
+      batchTarget=$('batchTarget'), batchTargetSelect=$('batchTargetSelect'),
+      progWrap=$('progWrap'), progPct=$('progPct'), progLbl=$('progLbl'),
+      progBatchTimer=$('progBatchTimer'), progPageTime=$('progPageTime'), progDoneFiles=$('progDoneFiles'),
+      progFill=$('progFill'), progFiles=$('progFiles'),
+      rightEmpty=$('rightEmpty'), rightContent=$('rightContent'),
+      resTitle=$('resTitle'), resChips=$('resChips'),
+      resultsFeed=$('resultsFeed'), resultsCounter=$('resultsCounter'),
+      dlBtn=$('dlBtn'), errMsg=$('errMsg'),
+      historyList=$('historyList'),
+      gpuWidget=$('gpuWidget'), gpuVramFill=$('gpuVramFill'),
+      gpuVramText=$('gpuVramText'), gpuUtilText=$('gpuUtilText'), gpuTempText=$('gpuTempText'),
+      autoTemplatesWrap=$('autoTemplatesWrap'), autoTemplatesGrid=$('autoTemplatesGrid'),
+      autoTplToggleAll=$('autoTplToggleAll'),
+      pageRangeInput=$('pageRangeInput');
+
+let selectedFiles=[];
+let activePdfUrl=null;
+let templatesData=[];
+let currentBatchId=null;
+let currentEventSource=null;
+let _isProcessing=false;
+let _modelStatus='stopped';
+let _pageResultCount=0;
+let _fileResultCount=0;
+let _seenResultIds=new Set();
+
+let promptTemplates=[];
+let promptMode='edit';
+let selectedPromptTemplateId='';
+let promptSaving=false;
+
+const UPLOAD_CHUNK_SIZE=100;
+const UPLOAD_PARALLEL=3;
+
+/* Helper: resolve API URL relative to current page */
+function apiUrl(path){
+  const base=document.baseURI||window.location.href;
+  return new URL('api/'+path, base).href;
+}
+
+const svgPdf='<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M7 21h10a2 2 0 002-2V9l-5-5H7a2 2 0 00-2 2v12a2 2 0 002 2z"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 3v4a2 2 0 002 2h4"/></svg>';
+const svgX='<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>';
+
+/* === TEMPLATES === */
+async function loadTemplates(preferredId=''){
+  try{
+    const r=await fetch(apiUrl('templates'));
+    if(!r.ok)throw new Error('templates api failed');
+    templatesData=await r.json();
+    const current=preferredId||templateSelect.value||'';
+    templateSelect.innerHTML='<option value="">Автоопределение (по библиотеке промптов)</option>';
+    templatesData.forEach(t=>{
+      const opt=document.createElement('option');
+      opt.value=t.id;opt.textContent=t.name;
+      templateSelect.appendChild(opt);
+    });
+    if(current&&templatesData.some(t=>t.id===current)){
+      templateSelect.value=current;
+    }else{
+      templateSelect.value='';
+    }
+    templateSelect.onchange();
+  }catch(e){console.warn('Templates load failed',e)}
+}
+
+templateSelect.onchange=()=>{
+  const tid=templateSelect.value;
+  const tmpl=templatesData.find(t=>t.id===tid);
+  templateDesc.textContent=tmpl?tmpl.description:'';
+  // Auto-fill page range from template
+  if(tmpl&&tmpl.page_range){
+    pageRangeInput.value=tmpl.page_range;
+  }
+  // Show/hide allowed templates checkboxes for auto-mode
+  if(!tid){
+    autoTemplatesWrap.classList.add('show');
+    renderAutoTemplateCheckboxes();
+  }else{
+    autoTemplatesWrap.classList.remove('show');
+  }
+};
+
+function renderAutoTemplateCheckboxes(){
+  if(!templatesData.length){autoTemplatesGrid.innerHTML='';return}
+  autoTemplatesGrid.innerHTML=templatesData.map(t=>{
+    return `<label class="auto-tpl-cb checked" data-tid="${esc(t.id)}">
+      <input type="checkbox" value="${esc(t.id)}" checked>
+      ${esc(t.name||t.id)}
+    </label>`;
+  }).join('');
+  autoTemplatesGrid.querySelectorAll('input[type=checkbox]').forEach(cb=>{
+    cb.onchange=()=>{cb.parentElement.classList.toggle('checked',cb.checked)};
+  });
+}
+
+autoTplToggleAll.onclick=()=>{
+  const cbs=[...autoTemplatesGrid.querySelectorAll('input[type=checkbox]')];
+  const allChecked=cbs.every(c=>c.checked);
+  cbs.forEach(c=>{c.checked=!allChecked;c.parentElement.classList.toggle('checked',!allChecked)});
+};
+
+function getSelectedAutoTemplateIds(){
+  const cbs=[...autoTemplatesGrid.querySelectorAll('input[type=checkbox]:checked')];
+  return cbs.map(c=>c.value);
+}
+
+loadTemplates();
+
+/* === VIEW SWITCHING === */
+function switchView(mode){
+  mainPanels.style.display=mode==='scan'?'grid':'none';
+  promptsView.style.display=mode==='prompts'?'block':'none';
+  chatView.style.display=mode==='chat'?'block':'none';
+  ocrView.style.display=mode==='ocr'?'block':'none';
+  tabScanBtn.classList.toggle('active',mode==='scan');
+  tabPromptsBtn.classList.toggle('active',mode==='prompts');
+  tabChatBtn.classList.toggle('active',mode==='chat');
+  tabOcrBtn.classList.toggle('active',mode==='ocr');
+  if(mode==='prompts')loadPromptTemplates(selectedPromptTemplateId);
+  if(mode==='chat')initChatView();
+}
+
+tabScanBtn.onclick=()=>switchView('scan');
+tabPromptsBtn.onclick=()=>switchView('prompts');
+tabChatBtn.onclick=()=>switchView('chat');
+tabOcrBtn.onclick=()=>switchView('ocr');
+
+/* === SYSTEM PROMPTS MANAGER === */
+function setPromptStatus(text='',type=''){
+  promptStatus.textContent=text||'';
+  promptStatus.className='prompt-status'+(type?` ${type}`:'');
+}
+
+function setPromptMode(mode){
+  promptMode=mode;
+  const createMode=mode==='create';
+  savePromptBtn.textContent=createMode?'Создать промпт':'Сохранить промпт';
+  deletePromptBtn.disabled=createMode||!selectedPromptTemplateId;
+  promptModeNote.textContent=createMode
+    ?'Создание нового типа документа: укажите название и системный промпт.'
+    :'Редактирование выбранного типа документа.';
+}
+
+function applyPromptTemplate(tmpl){
+  if(!tmpl){
+    selectedPromptTemplateId='';
+    promptDocName.value='';
+    promptDocDesc.value='';
+    systemPromptEditor.value='';
+    promptPageRange.value='';
+    setPromptMode('create');
+    return;
+  }
+  selectedPromptTemplateId=tmpl.id;
+  promptDocName.value=tmpl.name||'';
+  promptDocDesc.value=tmpl.description||'';
+  systemPromptEditor.value=tmpl.system_prompt||'';
+  promptPageRange.value=tmpl.page_range||'';
+  setPromptMode('edit');
+}
+
+function rebuildPromptTypeSelect(preferredId=''){
+  const current=preferredId||selectedPromptTemplateId||'';
+  promptDocSelect.innerHTML='<option value="">Выберите тип документа</option>';
+  const sorted=[...promptTemplates].sort((a,b)=>(a.name||'').localeCompare(b.name||'ru'));
+  sorted.forEach(t=>{
+    const opt=document.createElement('option');
+    opt.value=t.id;
+    opt.textContent=t.name;
+    promptDocSelect.appendChild(opt);
+  });
+  if(current&&sorted.some(t=>t.id===current)){
+    promptDocSelect.value=current;
+    applyPromptTemplate(sorted.find(t=>t.id===current));
+  }else if(sorted.length){
+    promptDocSelect.value=sorted[0].id;
+    applyPromptTemplate(sorted[0]);
+  }else{
+    promptDocSelect.value='';
+    applyPromptTemplate(null);
+  }
+}
+
+async function loadPromptTemplates(preferredId=''){
+  try{
+    const r=await fetch(apiUrl('prompt-templates'));
+    if(!r.ok){
+      const d=await r.json().catch(()=>({detail:'Ошибка загрузки промптов'}));
+      throw new Error(d.detail||`Ошибка ${r.status}`);
+    }
+    promptTemplates=await r.json();
+    rebuildPromptTypeSelect(preferredId);
+    setPromptStatus('');
+  }catch(e){
+    setPromptStatus('Не удалось загрузить промпты: '+e.message,'err');
+  }
+}
+
+function startCreatePromptMode(){
+  promptDocSelect.value='';
+  applyPromptTemplate(null);
+  setPromptStatus('');
+}
+
+promptDocSelect.onchange=()=>{
+  const id=promptDocSelect.value;
+  const tmpl=promptTemplates.find(t=>t.id===id);
+  if(!tmpl){
+    startCreatePromptMode();
+    return;
+  }
+  applyPromptTemplate(tmpl);
+  setPromptStatus('');
+};
+
+newPromptBtn.onclick=()=>startCreatePromptMode();
+
+savePromptBtn.onclick=async()=>{
+  if(promptSaving)return;
+  const name=promptDocName.value.trim();
+  const description=promptDocDesc.value.trim();
+  const systemPrompt=systemPromptEditor.value.trim();
+
+  if(!name){
+    setPromptStatus('Введите название типа документа.','err');
+    promptDocName.focus();
+    return;
+  }
+  if(!systemPrompt){
+    setPromptStatus('Системный промпт не может быть пустым.','err');
+    systemPromptEditor.focus();
+    return;
+  }
+
+  promptSaving=true;
+  savePromptBtn.disabled=true;
+  deletePromptBtn.disabled=true;
+  setPromptStatus(promptMode==='create'?'Создание...':'Сохранение...');
+
+  try{
+    const isCreate=promptMode==='create'||!selectedPromptTemplateId;
+    const url=isCreate?apiUrl('prompt-templates'):apiUrl('prompt-templates/'+selectedPromptTemplateId);
+    const method=isCreate?'POST':'PUT';
+    const r=await fetch(url,{
+      method,
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        name,
+        description,
+        system_prompt:systemPrompt,
+        fields:null,
+        page_range:promptPageRange.value.trim(),
+      }),
+    });
+    const d=await r.json().catch(()=>({detail:'Ошибка сохранения'}));
+    if(!r.ok){
+      throw new Error(d.detail||`Ошибка ${r.status}`);
+    }
+
+    const saved=d.template||null;
+    const newId=saved&&saved.id?saved.id:selectedPromptTemplateId;
+    await loadPromptTemplates(newId||'');
+    await loadTemplates(templateSelect.value||'');
+    setPromptStatus(isCreate?'Промпт создан и сохранён.':'Промпт сохранён.','ok');
+  }catch(e){
+    setPromptStatus('Ошибка сохранения: '+e.message,'err');
+  }finally{
+    promptSaving=false;
+    savePromptBtn.disabled=false;
+    deletePromptBtn.disabled=promptMode==='create'||!selectedPromptTemplateId;
+  }
+};
+
+deletePromptBtn.onclick=async()=>{
+  if(!selectedPromptTemplateId||promptSaving)return;
+  const tmpl=promptTemplates.find(t=>t.id===selectedPromptTemplateId);
+  if(!tmpl)return;
+  if(!confirm(`Удалить тип документа "${tmpl.name}" и его системный промпт?`))return;
+
+  deletePromptBtn.disabled=true;
+  setPromptStatus('Удаление...');
+  try{
+    const r=await fetch(apiUrl('prompt-templates/'+selectedPromptTemplateId),{method:'DELETE'});
+    const d=await r.json().catch(()=>({detail:'Ошибка удаления'}));
+    if(!r.ok){
+      throw new Error(d.detail||`Ошибка ${r.status}`);
+    }
+    selectedPromptTemplateId='';
+    await loadPromptTemplates('');
+    await loadTemplates(templateSelect.value||'');
+    setPromptStatus('Промпт удалён.','ok');
+  }catch(e){
+    setPromptStatus('Ошибка удаления: '+e.message,'err');
+    deletePromptBtn.disabled=false;
+  }
+};
+
+
+/* === OCR HINTS EDITOR === */
+let _ocrHints = [];
+let _selectedOcrHintId = '';
+
+const ocrHintSelect = document.getElementById("ocrHintSelect");
+const ocrHintName = document.getElementById("ocrHintName");
+const ocrHintDesc = document.getElementById("ocrHintDesc");
+const ocrHintEditor = document.getElementById("ocrHintEditor");
+const saveOcrHintBtn = document.getElementById("saveOcrHintBtn");
+const ocrHintStatus = document.getElementById("ocrHintStatus");
+
+document.getElementById("promptSubtabs").onclick = e => {
+  const btn = e.target.closest(".prompt-subtab");
+  if (!btn) return;
+  const sub = btn.dataset.sub;
+  document.querySelectorAll(".prompt-subtab").forEach(b => b.classList.toggle("active", b === btn));
+  document.getElementById("promptDocsPanel").style.display = sub === "docs" ? "" : "none";
+  document.getElementById("promptOcrPanel").style.display = sub === "ocr" ? "" : "none";
+  document.getElementById("editorDocsPanel").style.display = sub === "docs" ? "" : "none";
+  document.getElementById("editorOcrPanel").style.display = sub === "ocr" ? "" : "none";
+  if (sub === "ocr") loadOcrHints();
+};
+
+async function loadOcrHints() {
+  try {
+    const r = await fetch(apiUrl("ocr-hints"));
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    _ocrHints = await r.json();
+    ocrHintSelect.innerHTML = "";
+    _ocrHints.forEach(h => {
+      const opt = document.createElement("option");
+      opt.value = h.id;
+      opt.textContent = h.name;
+      ocrHintSelect.appendChild(opt);
+    });
+    if (_selectedOcrHintId && _ocrHints.find(h => h.id === _selectedOcrHintId)) {
+      ocrHintSelect.value = _selectedOcrHintId;
+    } else if (_ocrHints.length) {
+      ocrHintSelect.value = _ocrHints[0].id;
+    }
+    applyOcrHint(_ocrHints.find(h => h.id === ocrHintSelect.value));
+  } catch (e) {
+    ocrHintStatus.textContent = "Ошибка загрузки: " + e.message;
+    ocrHintStatus.className = "prompt-status err";
+  }
+}
+
+function applyOcrHint(h) {
+  if (!h) { ocrHintName.value = ""; ocrHintDesc.value = ""; ocrHintEditor.value = ""; _selectedOcrHintId = ""; return; }
+  _selectedOcrHintId = h.id;
+  ocrHintName.value = h.name || "";
+  ocrHintDesc.value = h.description || "";
+  ocrHintEditor.value = h.hint || "";
+  ocrHintStatus.textContent = "";
+  ocrHintStatus.className = "prompt-status";
+}
+
+ocrHintSelect.onchange = () => {
+  const h = _ocrHints.find(x => x.id === ocrHintSelect.value);
+  applyOcrHint(h);
+};
+
+saveOcrHintBtn.onclick = async () => {
+  if (!_selectedOcrHintId) return;
+  const name = ocrHintName.value.trim();
+  if (!name) { ocrHintStatus.textContent = "Введите название"; ocrHintStatus.className = "prompt-status err"; return; }
+  saveOcrHintBtn.disabled = true;
+  ocrHintStatus.textContent = "Сохранение...";
+  ocrHintStatus.className = "prompt-status";
+  try {
+    const r = await fetch(apiUrl("ocr-hints/" + _selectedOcrHintId), {
+      method: "PUT",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({name: name, description: ocrHintDesc.value.trim(), hint: ocrHintEditor.value})
+    });
+    if (!r.ok) { const d = await r.json().catch(() => ({})); throw new Error(d.detail || "HTTP " + r.status); }
+    ocrHintStatus.textContent = "Сохранено";
+    ocrHintStatus.className = "prompt-status ok";
+    await loadOcrHints();
+    rebuildOcrModeSelect();
+  } catch (e) {
+    ocrHintStatus.textContent = "Ошибка: " + e.message;
+    ocrHintStatus.className = "prompt-status err";
+  } finally {
+    saveOcrHintBtn.disabled = false;
+  }
+};
+
+function rebuildOcrModeSelect() {
+  const sel = document.getElementById("ocrModeSelect");
+  if (!sel || !_ocrHints.length) return;
+  const cur = sel.value;
+  sel.innerHTML = "";
+  _ocrHints.forEach(h => {
+    const opt = document.createElement("option");
+    opt.value = h.id;
+    opt.textContent = h.name;
+    sel.appendChild(opt);
+  });
+  sel.value = _ocrHints.find(h => h.id === cur) ? cur : _ocrHints[0].id;
+}
+
+/* === DRAG & DROP (with folder support) === */
+dropZone.onclick=e=>{if(!e.target.closest('.drop-folder-link'))fileInput.click()};
+folderPickBtn.onclick=e=>{e.preventDefault();e.stopPropagation();folderInput.click()};
+dropZone.ondragover=e=>{e.preventDefault();dropZone.classList.add('over')};
+dropZone.ondragleave=()=>dropZone.classList.remove('over');
+dropZone.ondrop=async e=>{
+  e.preventDefault();dropZone.classList.remove('over');
+  fileMeta.textContent='Сканирование папок...';
+  const files=await collectFilesFromDrop(e.dataTransfer);
+  fileMeta.textContent='';
+  addFiles(files);
+};
+fileInput.onchange=()=>{addFiles(fileInput.files);fileInput.value=''};
+folderInput.onchange=()=>{addFiles(folderInput.files);folderInput.value=''};
+
+async function collectFilesFromDrop(dt){
+  const items=dt.items;
+  if(!items||!items.length||!items[0].webkitGetAsEntry)return dt.files;
+  const entries=[];
+  for(let i=0;i<items.length;i++){
+    const entry=items[i].webkitGetAsEntry();
+    if(entry)entries.push(entry);
+  }
+  const pdfs=[];
+  let scanCount=0;
+  async function readDir(dirEntry){
+    return new Promise((resolve,reject)=>{
+      const reader=dirEntry.createReader();
+      const all=[];
+      (function batch(){
+        reader.readEntries(results=>{
+          if(!results.length)return resolve(all);
+          all.push(...results);batch();
+        },reject);
+      })();
+    });
+  }
+  async function walk(entry,pathPrefix){
+    if(entry.isFile){
+      const file=await new Promise((res,rej)=>entry.file(res,rej));
+      if(file.name.toLowerCase().endsWith('.pdf')){
+        const displayName=pathPrefix?pathPrefix+'/'+file.name:file.name;
+        if(pathPrefix){
+          const renamed=new File([file],displayName,{type:file.type,lastModified:file.lastModified});
+          pdfs.push(renamed);
+        }else{
+          pdfs.push(file);
+        }
+        scanCount++;
+        if(scanCount%50===0){
+          fileMeta.textContent=`Сканирование... найдено ${scanCount} файлов`;
+          await new Promise(r=>setTimeout(r,0));
+        }
+      }
+    }else if(entry.isDirectory){
+      const children=await readDir(entry);
+      const nextPrefix=pathPrefix?pathPrefix+'/'+entry.name:entry.name;
+      for(const child of children)await walk(child,nextPrefix);
+    }
+  }
+  for(const entry of entries)await walk(entry,'');
+  return pdfs;
+}
+
+function addFiles(fl){
+  const existing=new Set(selectedFiles.map(s=>s.name));
+  for(const f of fl)
+    if(f.name.toLowerCase().endsWith('.pdf')&&!existing.has(f.name)){
+      selectedFiles.push(f);
+      existing.add(f.name);
+    }
+  render();
+  updateBatchTargets();
+  if(selectedFiles.length) showPdf(selectedFiles[0]);
+}
+
+function showPdf(file){
+  if(activePdfUrl) URL.revokeObjectURL(activePdfUrl);
+  activePdfUrl=URL.createObjectURL(file);
+  pdfFrame.src=activePdfUrl;
+  pdfPreview.style.display='block';
+  fileList.querySelectorAll('.fi').forEach((el,i)=>{
+    el.classList.toggle('active',selectedFiles[i]===file);
+  });
+}
+
+function render(){
+  fileList.innerHTML='';
+  const total=selectedFiles.reduce((s,f)=>s+f.size,0);
+  const totalMB=total/1048576;
+  const sizeLabel=totalMB>=1024?(totalMB/1024).toFixed(1)+' GB':totalMB.toFixed(1)+' MB';
+  if(selectedFiles.length>50){
+    // Collapsed summary for large file lists — no DOM per file
+    const summary=document.createElement('div');
+    summary.className='fi';
+    summary.style.justifyContent='space-between';
+    summary.innerHTML=`<div class="fi-info" style="flex:1"><div class="fi-name">${selectedFiles.length} файл(ов) \u00b7 ${sizeLabel}</div><div class="fi-size">Слишком много для списка — используйте «Очистить»</div></div><button class="fi-rm" id="clearAllInline" title="Очистить всё">${svgX}</button>`;
+    fileList.appendChild(summary);
+    summary.querySelector('#clearAllInline').onclick=e=>{e.stopPropagation();clearQueue()};
+  }else{
+    selectedFiles.forEach((f,i)=>{
+      const el=document.createElement('div');el.className='fi';
+      el.innerHTML=`<div class="fi-icon">${svgPdf}</div><div class="fi-info"><div class="fi-name">${esc(f.name)}</div><div class="fi-size">${(f.size/1048576).toFixed(1)} MB</div></div><button class="fi-rm" data-i="${i}">${svgX}</button>`;
+      el.addEventListener('click',e=>{
+        if(!e.target.closest('.fi-rm')) showPdf(f);
+      });
+      fileList.appendChild(el);
+    });
+    fileList.querySelectorAll('.fi-rm').forEach(b=>b.onclick=e=>{
+      e.stopPropagation();
+      const idx=+b.dataset.i;
+      selectedFiles.splice(idx,1);
+      if(!selectedFiles.length){
+        pdfPreview.style.display='none';
+        if(activePdfUrl){URL.revokeObjectURL(activePdfUrl);activePdfUrl=null;}
+      } else {
+        showPdf(selectedFiles[Math.min(idx,selectedFiles.length-1)]);
+      }
+      render();
+    });
+  }
+  fileMeta.textContent=selectedFiles.length?`${selectedFiles.length} файл(ов) \u00b7 ${sizeLabel}`:'';
+  uploadBtn.disabled=!selectedFiles.length;
+  clearBtn.style.display=selectedFiles.length?'flex':'none';
+}
+
+
+/* === CLEAR QUEUE === */
+function clearQueue(){
+  selectedFiles=[];
+  pdfPreview.style.display='none';
+  if(activePdfUrl){URL.revokeObjectURL(activePdfUrl);activePdfUrl=null;}
+  render();
+  updateBatchTargets();
+}
+
+/* === STOP BATCH === */
+async function stopBatch(){
+  if(!currentBatchId)return;
+  stopBtn.style.display='none';
+  try{
+    const r=await fetch(apiUrl('batch/'+currentBatchId+'/stop'),{method:'POST'});
+    if(!r.ok){
+      const d=await r.json().catch(()=>({detail:'Stop failed'}));
+      errMsg.textContent=d.detail||'Не удалось остановить';
+      errMsg.style.display='block';
+    }
+  }catch(e){
+    errMsg.textContent='Ошибка остановки: '+e.message;
+    errMsg.style.display='block';
+  }
+}
+
+/* === BATCH TARGET SELECTOR === */
+async function updateBatchTargets(){
+  if(!selectedFiles.length){
+    batchTarget.style.display='none';
+    return;
+  }
+  try{
+    const r=await fetch(apiUrl('batches'));
+    const batches=await r.json();
+    const eligible=batches.filter(b=>b.status==='uploading'||b.status==='interrupted'||b.status==='error');
+    batchTargetSelect.innerHTML='<option value="new">Новый пакет</option>';
+    eligible.forEach(b=>{
+      const statusLabels={uploading:'загрузка',interrupted:'прерван',error:'ошибка'};
+      const label=statusLabels[b.status]||b.status;
+      const opt=document.createElement('option');
+      opt.value=b.id;
+      opt.textContent=`Пакет #${b.id} (${b.file_count||0} файлов, ${label})`;
+      batchTargetSelect.appendChild(opt);
+    });
+    batchTarget.style.display=eligible.length?'block':'none';
+  }catch(e){
+    batchTarget.style.display='none';
+  }
+}
+
+/* === PARALLEL UPLOAD HELPERS === */
+async function uploadOneChunk(bid, chunk, retries=3){
+  let lastErr;
+  for(let attempt=0;attempt<retries;attempt++){
+    try{
+      const fd=new FormData();
+      chunk.forEach(f=>fd.append('files',f));
+      const upR=await fetch(apiUrl('batch/'+bid+'/upload'),{method:'POST',body:fd});
+      if(!upR.ok){
+        const upD=await upR.json().catch(()=>({detail:'Upload failed'}));
+        throw new Error(upD.detail||'Upload chunk failed');
+      }
+      return;
+    }catch(e){
+      lastErr=e;
+      if(attempt<retries-1)await new Promise(r=>setTimeout(r,1000*(attempt+1)));
+    }
+  }
+  throw lastErr;
+}
+
+/* === CHUNKED UPLOAD + PROCESSING === */
+uploadBtn.onclick=async()=>{
+  if(!selectedFiles.length||_isProcessing)return;
+
+  /* Check model is loaded before starting */
+  try{
+    const ms=await fetch(apiUrl('model/status'));
+    const md=await ms.json();
+    if(md.status!=='running'){
+      errMsg.textContent='\u26a0\ufe0f \u041c\u043e\u0434\u0435\u043b\u044c \u043d\u0435 \u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043d\u0430. \u041d\u0430\u0436\u043c\u0438\u0442\u0435 \u043a\u043d\u043e\u043f\u043a\u0443 \u00ab\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044c\u00bb \u0432 \u0448\u0430\u043f\u043a\u0435 \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u044b.';
+      errMsg.style.display='block';
+      return;
+    }
+  }catch(e){
+    errMsg.textContent='\u041d\u0435 \u0443\u0434\u0430\u043b\u043e\u0441\u044c \u043f\u0440\u043e\u0432\u0435\u0440\u0438\u0442\u044c \u0441\u0442\u0430\u0442\u0443\u0441 \u043c\u043e\u0434\u0435\u043b\u0438. \u041f\u043e\u043f\u0440\u043e\u0431\u0443\u0439\u0442\u0435 \u043f\u043e\u0437\u0436\u0435.';
+    errMsg.style.display='block';
+    return;
+  }
+
+  _isProcessing=true;
+  uploadBtn.disabled=true;
+  errMsg.style.display='none';
+  batchTarget.style.display='none';
+  rightEmpty.style.display='flex';
+  rightContent.style.display='none';
+  resultsFeed.innerHTML='';
+  _pageResultCount=0;
+
+  try{
+    /* Step 1: Create or select batch */
+    let bid;
+    const targetBatch=batchTargetSelect.value;
+    if(targetBatch&&targetBatch!=='new'){
+      bid=targetBatch;
+    }else{
+      const createBody={
+        template_id:templateSelect.value||'',
+        custom_prompt:customPrompt.value||'',
+        page_range:(pageRangeInput.value||'').trim(),
+      };
+      if(!templateSelect.value&&!customPrompt.value.trim()){
+        const selIds=getSelectedAutoTemplateIds();
+        if(selIds.length<templatesData.length){
+          createBody.allowed_template_ids=selIds;
+        }
+      }
+      const createR=await fetch(apiUrl('batch/create'),{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(createBody),
+      });
+      const createD=await createR.json();
+      if(!createR.ok)throw new Error(createD.detail||'Batch create failed');
+      bid=createD.batch_id;
+    }
+    currentBatchId=bid;
+
+    /* Step 2: Upload files in chunks */
+    const totalFiles=selectedFiles.length;
+    let uploaded=0;
+    uploadProg.style.display='block';
+    uploadProgLabel.textContent='\u0417\u0430\u0433\u0440\u0443\u0437\u043a\u0430 \u0444\u0430\u0439\u043b\u043e\u0432 \u043d\u0430 \u0441\u0435\u0440\u0432\u0435\u0440...';
+    uploadProgCount.textContent=`0 / ${totalFiles}`;
+    uploadProgFill.style.width='0%';
+
+    // Split into chunks
+    const allChunks=[];
+    for(let i=0;i<totalFiles;i+=UPLOAD_CHUNK_SIZE)
+      allChunks.push(selectedFiles.slice(i,i+UPLOAD_CHUNK_SIZE));
+
+    let sseStarted=false;
+    const uploadStart=Date.now();
+    let uploadedChunks=0;
+
+    for(let i=0;i<allChunks.length;i+=UPLOAD_PARALLEL){
+      const batch=allChunks.slice(i,i+UPLOAD_PARALLEL);
+      await Promise.all(batch.map(chunk=>uploadOneChunk(bid,chunk)));
+      uploaded+=batch.reduce((s,c)=>s+c.length,0);
+      uploadedChunks+=batch.length;
+      const pct=Math.round(uploaded/totalFiles*100);
+      uploadProgFill.style.width=pct+'%';
+      // ETA calculation
+      const elapsed=(Date.now()-uploadStart)/1000;
+      const rate=uploaded/elapsed;
+      const remaining=rate>0?Math.round((totalFiles-uploaded)/rate):null;
+      const etaStr=remaining!==null&&remaining>1?` · ~${remaining}с`:'' ;
+      uploadProgCount.textContent=`${uploaded} / ${totalFiles}${etaStr}`;
+
+      /* Start tracking progress after first batch of chunks */
+      if(!sseStarted){
+        sseStarted=true;
+        trackProgress(bid);
+      }
+    }
+
+    uploadProgLabel.textContent='Все файлы загружены';
+    uploadProgFill.style.width='100%';
+
+    /* Signal upload complete - server will finish after processing all files */
+    await fetch(apiUrl('batch/'+bid+'/upload-complete'),{method:'POST'}).catch(()=>{});
+
+    /* For resume case, ensure processing is running */
+    const isResume=(targetBatch&&targetBatch!=='new');
+    if(isResume){
+      await fetch(apiUrl('batch/'+bid+'/resume'),{method:'POST'}).catch(()=>{});
+    }
+
+    selectedFiles=[];render();
+    if(!sseStarted) trackProgress(bid);
+
+  }catch(e){
+    errMsg.textContent=e.message;
+    errMsg.style.display='block';
+    uploadBtn.disabled=false;
+    uploadProg.style.display='none';
+    _isProcessing=false;
+  }
+};
+
+function fileStatusLabel(status){
+  const map={
+    pending:'Ожидание',
+    uploaded:'Загружен',
+    queued:'В очереди',
+    converting:'Конвертация',
+    processing:'Обработка',
+    done:'Готово',
+    interrupted:'Прерван',
+    error:'Ошибка',
+  };
+  return map[status]||status||'—';
+}
+
+function safeStatusClass(status){
+  return /^[a-z_]+$/i.test(status||'')?status:'pending';
+}
+
+/* === JSON SYNTAX HIGHLIGHT === */
+function syntaxHighlight(obj){
+  const json=JSON.stringify(obj,null,2);
+  return json.replace(/("(\\u[\da-fA-F]{4}|\\[^u]|[^\\\"])*"(\s*:)?|\b(true|false)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?|\bnull\b)/g,m=>{
+    let cls='json-num';
+    if(/^"/.test(m)){cls=/:$/.test(m)?'json-key':'json-str'}
+    else if(/true|false/.test(m)){cls='json-bool'}
+    else if(/null/.test(m)){cls='json-null'}
+    return'<span class="'+cls+'">'+m+'</span>';
+  });
+}
+
+function formatDuration(ms){
+  if(ms===null||ms===undefined)return'';
+  if(ms<1000)return ms+'\u043c\u0441';
+  return(ms/1000).toFixed(1)+'\u0441';
+}
+
+function _ensureRightPanelVisible(){
+  if(_pageResultCount===0){
+    rightEmpty.style.display='none';
+    rightContent.style.display='flex';
+    resultsFeed.innerHTML='';
+    resTitle.textContent=currentBatchId?'\u041f\u0430\u043a\u0435\u0442 #'+currentBatchId:'\u0420\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442\u044b';
+    resChips.innerHTML='<span class="chip"><b>\u0420\u0435\u0436\u0438\u043c</b>Live</span>';
+    if(currentBatchId){ dlBtn.style.display='flex'; }
+  }
+}
+
+function _filterResultKeys(obj){
+  return Object.fromEntries(
+    Object.entries(obj||{}).filter(([k,v])=>
+      !['filename','page','parse_error','raw_text','error','extracted'].includes(k) && v!==null && v!==''
+    )
+  );
+}
+
+function _buildResultCard(headerHtml, display){
+  const card=document.createElement('div');
+  card.className='page-result-card';
+  const header=document.createElement('div');
+  header.className='page-result-header';
+  header.innerHTML=headerHtml;
+  const body=document.createElement('div');
+  body.className='page-result-body';
+  const jsonBlock=document.createElement('div');
+  jsonBlock.className='page-result-json';
+  jsonBlock.innerHTML=syntaxHighlight(display);
+  body.appendChild(jsonBlock);
+  card.appendChild(header);
+  card.appendChild(body);
+  return card;
+}
+
+function addPageResult(data){
+  const pageKey='page:'+data.filename+':'+data.page;
+  if(_seenResultIds.has(pageKey)) return;
+  _seenResultIds.add(pageKey);
+
+  _ensureRightPanelVisible();
+  _pageResultCount++;
+  resultsCounter.textContent=`${_pageResultCount} стр.`;
+
+  const durationText=data.duration_ms?formatDuration(data.duration_ms):'';
+  const headerHtml=
+    '<span class="pr-filename" title="'+esc(data.filename||'')+'">'+esc(data.filename||'')+'</span>'+
+    '<span class="pr-page">\u0441\u0442\u0440. '+esc(String(data.page||1))+'</span>'+
+    (durationText?'<span class="pr-duration">'+esc(durationText)+'</span>':'');
+
+  const display=_filterResultKeys(data.result);
+  const card=_buildResultCard(headerHtml, display);
+  card.setAttribute('data-page-file', data.filename);
+  resultsFeed.appendChild(card);
+  resultsFeed.scrollTop=resultsFeed.scrollHeight;
+}
+
+function addFileResult(data){
+  if(_seenResultIds.has('file:'+data.filename)) return;
+  _seenResultIds.add('file:'+data.filename);
+
+  // Remove individual page cards for this file — replace with merged file card
+  const pageCards=resultsFeed.querySelectorAll('[data-page-file="'+CSS.escape(data.filename)+'"]');
+  const removedCount=pageCards.length;
+  pageCards.forEach(c=>c.remove());
+
+  _ensureRightPanelVisible();
+  if(removedCount===0){
+    // No page cards were shown yet (shouldn't happen normally, but just in case)
+    _pageResultCount++;
+  }
+
+  // Show first-result button and scroll on first file result
+  _fileResultCount++;
+  resultsCounter.textContent=`${_fileResultCount} файл${_fileResultCount===1?'':_fileResultCount<5?'а':'ов'} обработано`;
+  const _pfrbtn=document.getElementById('progFirstResultBtn');
+  if(_pfrbtn&&!_pfrbtn.classList.contains('visible')){
+    _pfrbtn.classList.add('visible');
+    if(window.innerWidth<=900){
+      document.querySelector('.panel-right').scrollIntoView({behavior:'smooth'});
+    }
+  }
+
+  const headerHtml=
+    '<span class="pr-filename" title="'+esc(data.filename||'')+'">'+esc(data.filename||'')+'</span>'+
+    '<span class="pr-page">\u0438\u0442\u043e\u0433</span>';
+
+  const display=_filterResultKeys(data.result);
+  const card=_buildResultCard(headerHtml, display);
+  card.setAttribute('data-file', data.filename);
+  // Highlight first result card
+  if(_seenResultIds.size===1){
+    card.classList.add('highlight');
+  }
+  resultsFeed.appendChild(card);
+  resultsFeed.scrollTop=resultsFeed.scrollHeight;
+}
+
+function scrollToResult(filename){
+  const card=resultsFeed.querySelector('[data-file="'+CSS.escape(filename)+'"]');
+  if(card){
+    card.scrollIntoView({behavior:'smooth',block:'nearest'});
+    card.classList.add('highlight');
+    setTimeout(()=>card.classList.remove('highlight'),1500);
+  }
+}
+
+function scrollToFirstResult(){
+  if(window.innerWidth<=900){
+    document.querySelector('.panel-right').scrollIntoView({behavior:'smooth'});
+  }else{
+    resultsFeed.scrollTop=0;
+  }
+}
+
+function trackProgress(bid){
+  currentBatchId=bid;
+  _pageResultCount=0;
+  _fileResultCount=0;
+  _seenResultIds=new Set();
+  const _pfrbtn=document.getElementById('progFirstResultBtn');
+  if(_pfrbtn)_pfrbtn.classList.remove('visible');
+  progWrap.style.display='block';
+  stopBtn.style.display='flex';
+  progFill.style.width='0%';
+  progPct.textContent='0%';
+  progLbl.textContent='Конвертация PDF...';
+  progBatchTimer.textContent='Время пакета: --';
+  progPageTime.textContent='Время на 1 док.: --';
+  progDoneFiles.textContent='Файлы: 0 / 0';
+  progFiles.innerHTML='';
+
+  if(currentEventSource){currentEventSource.close();currentEventSource=null;}
+
+  let sseRetries=0;
+  const MAX_SSE_RETRIES=9999;
+
+  function connectSSE(){
+    const es=new EventSource(apiUrl('batch/'+bid+'/progress'));
+    currentEventSource=es;
+
+    es.addEventListener('page_result',ev=>{
+      try{
+        const data=JSON.parse(ev.data);
+        addPageResult(data);
+      }catch(e){console.warn('Invalid page_result payload',e)}
+    });
+
+    es.addEventListener('file_result',ev=>{
+      try{
+        const data=JSON.parse(ev.data);
+        addFileResult(data);
+      }catch(e){console.warn('Invalid file_result',e)}
+    });
+
+    es.addEventListener('progress',ev=>{
+      sseRetries=0;
+
+      let p;
+      try{
+        p=JSON.parse(ev.data);
+      }catch(e){
+        console.warn('Invalid SSE progress payload',e);
+        return;
+      }
+      if(!p||!Array.isArray(p.files))return;
+
+      const totalFiles=p.total_files||p.files.length||1;
+      const filesDone=p.files_done||p.done_files_count||0;
+      const pct=totalFiles>0?Math.round(filesDone/totalFiles*100):0;
+      progFill.style.width=pct+'%';
+      progPct.textContent=pct+'%';
+      progLbl.textContent=`${filesDone} / ${totalFiles} док. (${p.pages_done||0} стр.)`;
+      progBatchTimer.textContent='Время пакета: '+(p.processing_time||'--');
+      progPageTime.textContent='VLM на 1 док.: '+(p.avg_vlm_doc_time||p.avg_doc_time||p.avg_page_time||'--');
+      progDoneFiles.textContent=`Файлы: ${p.done_files_count||0} / ${p.total_files||p.files.length||0}`;
+
+      let h='';
+      let hasProcessing=false;
+      p.files.forEach(f=>{
+        const timeText=(f.status==='done'&&f.actual_duration)?f.actual_duration:null;
+        const subText=[
+          fileStatusLabel(f.status),
+          timeText?`Готово за ${timeText}`:null,
+          f.pages?`${f.pages} стр.`:null,
+          f.error,
+        ].filter(Boolean).join(' · ');
+        let templateLabel='';
+        if(f.detected_template_id&&p.auto_mode){
+          const tmpl=templatesData.find(t=>t.id===f.detected_template_id);
+          const tname=tmpl?tmpl.name:f.detected_template_id;
+          templateLabel='автоопределение: '+tname;
+        }
+        const isDone=f.status==='done';
+        const isActive=f.status==='processing'||f.status==='converting';
+        if(isActive)hasProcessing=true;
+        const jsonBadge=isDone?'<span class="pf-json-badge">JSON</span>':'';
+        h+=`<div class="pf${isDone?' clickable':''}" data-pf-file="${esc(f.filename)}">
+          <div class="pf-indicator s-${safeStatusClass(f.status)}"></div>
+          <div class="pf-main">
+            <div class="pf-row">
+              <span class="pf-name" title="${esc(f.filename)}">${esc(f.filename)}${jsonBadge}</span>
+              <span class="pf-cnt">${f.pages_done||0}/${f.pages||0} стр.</span>
+            </div>
+            ${templateLabel?`<div class="pf-template">${esc(templateLabel)}</div>`:''}
+            <div class="pf-sub${f.error?' error':''}" title="${esc(subText)}">${esc(subText||'—')}</div>
+          </div>
+        </div>`;
+      });
+      progFiles.innerHTML=h;
+      // Click handler for done files → scroll to result
+      progFiles.querySelectorAll('.pf.clickable').forEach(el=>{
+        el.onclick=()=>scrollToResult(el.dataset.pfFile);
+      });
+      // Auto-scroll to currently processing file
+      if(hasProcessing){
+        const active=progFiles.querySelector('.pf-indicator.s-processing,.pf-indicator.s-converting');
+        if(active)active.closest('.pf').scrollIntoView({block:'nearest',behavior:'smooth'});
+      }
+
+      if(p.status==='done'||p.status==='error'||p.status==='interrupted'){
+        if(p.status==='interrupted'){
+          /* Double-check: query the batch API to confirm it's really interrupted.
+             The DB status may be stale if the processing task is still alive. */
+          (async()=>{
+            try{
+              await new Promise(r=>setTimeout(r,3000));
+              const resp=await fetch(apiUrl('batch/'+bid));
+              if(resp.ok){
+                const real=await resp.json();
+                if(real.status==='processing'||real.status==='uploading'){
+                  console.log('[SSE] interrupted was false alarm, batch still '+real.status+', reconnecting');
+                  es.close();
+                  currentEventSource=null;
+                  setTimeout(connectSSE,1000);
+                  return;
+                }
+                if(real.status==='done'){
+                  es.close();
+                  currentEventSource=null;
+                  _isProcessing=false;
+                  progPct.textContent='100%';
+                  progLbl.textContent=`Готово — ${totalFiles} док. (${real.pages_done||0} стр.)`;
+                  progFill.style.width='100%';
+                  loadResults(bid);
+                  uploadBtn.disabled=false;
+                  uploadProg.style.display='none';
+                  stopBtn.style.display='none';
+                  loadBatchHistory();
+                  return;
+                }
+              }
+            }catch(e){console.warn('Interrupted re-check failed',e)}
+            /* Confirmed interrupted */
+            es.close();
+            currentEventSource=null;
+            _isProcessing=false;
+            progLbl.textContent='Прервано — можно возобновить';
+            errMsg.textContent='Обработка прервана. Используйте кнопку «Возобновить» в истории.';
+            errMsg.style.display='block';
+            uploadBtn.disabled=false;
+            uploadProg.style.display='none';
+            stopBtn.style.display='none';
+            loadBatchHistory();
+          })();
+          return; /* don't close SSE yet, the async check will handle it */
+        }
+        es.close();
+        currentEventSource=null;
+        _isProcessing=false;
+        if(p.status==='done'){
+          progPct.textContent='100%';
+          progLbl.textContent=`Готово — ${totalFiles} док. (${p.pages_done||0} стр.)`;
+          progFill.style.width='100%';
+          // Reload ALL results from API to ensure nothing was missed during SSE
+          loadResults(bid);
+        }else{
+          progLbl.textContent='Ошибка';
+          errMsg.textContent='Произошла ошибка при обработке пакета';
+          errMsg.style.display='block';
+        }
+        uploadBtn.disabled=false;
+        uploadProg.style.display='none';
+        stopBtn.style.display='none';
+        loadBatchHistory();
+      }
+    });
+
+    es.addEventListener('stream_error',ev=>{
+      try{
+        const d=JSON.parse(ev.data);
+        errMsg.textContent=d.detail||'Ошибка потока прогресса';
+      }catch(_){
+        errMsg.textContent='Ошибка потока прогресса';
+      }
+      errMsg.style.display='block';
+    });
+
+    es.onerror=()=>{
+      es.close();
+      currentEventSource=null;
+      sseRetries++;
+      if(sseRetries<MAX_SSE_RETRIES){
+        progLbl.textContent=`Переподключение... (попытка ${sseRetries})`;
+        setTimeout(connectSSE,3000);
+      }else{
+        _isProcessing=false;
+        uploadBtn.disabled=false;
+        progLbl.textContent='Соединение потеряно';
+        errMsg.textContent='Потеряно соединение с сервером. Обработка продолжается на сервере — обновите страницу.';
+        errMsg.style.display='block';
+        loadBatchHistory();
+      }
+    };
+  }
+  connectSSE();
+}
+
+/* === RESUME BATCH === */
+async function resumeBatch(bid){
+  if(_isProcessing)return;
+  errMsg.style.display='none';
+
+  /* Check model first */
+  try{
+    const ms=await fetch(apiUrl('model/status'));
+    const md=await ms.json();
+    if(md.status!=='running'){
+      errMsg.textContent='\u26a0\ufe0f \u041c\u043e\u0434\u0435\u043b\u044c \u043d\u0435 \u0437\u0430\u0433\u0440\u0443\u0436\u0435\u043d\u0430. \u041d\u0430\u0436\u043c\u0438\u0442\u0435 \u043a\u043d\u043e\u043f\u043a\u0443 \u00ab\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044c\u00bb \u0432 \u0448\u0430\u043f\u043a\u0435.';
+      errMsg.style.display='block';
+      return;
+    }
+  }catch(e){}
+
+  _isProcessing=true;
+  uploadBtn.disabled=true;
+  uploadProg.style.display='none';
+
+  try{
+    const r=await fetch(apiUrl('batch/'+bid+'/resume'),{method:'POST'});
+    if(!r.ok){
+      const d=await r.json().catch(()=>({detail:'Resume failed'}));
+      throw new Error(d.detail||'Resume failed');
+    }
+    trackProgress(bid);
+  }catch(e){
+    errMsg.textContent=e.message;
+    errMsg.style.display='block';
+    uploadBtn.disabled=false;
+    _isProcessing=false;
+  }
+}
+
+/* === DELETE BATCH === */
+async function deleteBatch(bid){
+  if(!confirm('\u0423\u0434\u0430\u043b\u0438\u0442\u044c \u043f\u0430\u043a\u0435\u0442 #'+bid+' \u0438 \u0432\u0441\u0435 \u0435\u0433\u043e \u0444\u0430\u0439\u043b\u044b?'))return;
+  try{
+    const r=await fetch(apiUrl('batch/'+bid),{method:'DELETE'});
+    if(!r.ok){
+      const d=await r.json().catch(()=>({detail:'Delete failed'}));
+      errMsg.textContent=d.detail||'Delete failed';
+      errMsg.style.display='block';
+      return;
+    }
+    loadBatchHistory();
+  }catch(e){
+    errMsg.textContent=e.message;
+    errMsg.style.display='block';
+  }
+}
+
+/* === BATCH HISTORY === */
+async function loadBatchHistory(){
+  try{
+    const r=await fetch(apiUrl('batches'));
+    const batches=await r.json();
+    if(!batches.length){
+      historyList.innerHTML='<div style="font-size:12px;color:var(--text-3);padding:8px">Нет обработок</div>';
+      return;
+    }
+    let h='';
+    const statusLabels={done:'Готово',processing:'Обработка',uploading:'Загрузка',interrupted:'Прервано',error:'Ошибка'};
+    batches.filter(b=>b.file_count>0).forEach(b=>{
+      const st=b.status||'uploading';
+      const label=statusLabels[st]||st;
+      const date=b.created_at?new Date(b.created_at).toLocaleString('ru-RU',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+      const canResume=(st==='interrupted'||st==='error');
+      const canView=(st==='done');
+      let badge='';
+      if(b.template_id){
+        const tmpl=templatesData.find(t=>t.id===b.template_id);
+        badge=`<span class="hb-badge tpl">${esc(tmpl?tmpl.name:b.template_id)}</span>`;
+      }else if(b.custom_prompt){
+        badge='<span class="hb-badge custom">Свой промпт</span>';
+      }else{
+        badge='<span class="hb-badge auto">Авто</span>';
+      }
+      h+=`<div class="hb" data-bid="${esc(b.id)}">
+        <div class="hb-dot st-${st}"></div>
+        <div class="hb-info">
+          <div class="hb-id">Пакет #${esc(b.id)}${badge}</div>
+          <div class="hb-meta">${date} &middot; ${b.file_count||0} файлов &middot; ${b.pages_done||0}/${b.total_pages||0} стр.${b.processing_time?' &middot; '+b.processing_time:''}</div>
+        </div>
+        <span class="hb-status st-${st}">${esc(label)}</span>
+        <div class="hb-actions">
+          ${canResume?`<button class="hb-btn resume" onclick="event.stopPropagation();resumeBatch('${esc(b.id)}')">Возобновить</button>`:''}
+          ${canView?`<button class="hb-btn" onclick="event.stopPropagation();loadResults('${esc(b.id)}')">Результаты</button>`:''}
+          ${st!=='processing'?`<button class="hb-btn del" onclick="event.stopPropagation();deleteBatch('${esc(b.id)}')" title="Удалить">\u2716</button>`:''}
+        </div>
+      </div>`;
+    });
+    historyList.innerHTML=h;
+  }catch(e){
+    console.warn('History load failed',e);
+  }
+}
+
+loadBatchHistory();
+
+/* === RESULTS FEED (JSON cards) === */
+function renderResultsFeed(pageRows,{bid='',title=''}={}){
+  _pageResultCount=0;
+  _seenResultIds=new Set();
+  resultsFeed.innerHTML='';
+  resTitle.textContent=title||('\u041f\u0430\u043a\u0435\u0442 #'+bid);
+  resChips.innerHTML='';
+
+  if(!pageRows.length){
+    rightEmpty.style.display='flex';
+    rightContent.style.display='none';
+    dlBtn.style.display='none';
+    return;
+  }
+
+  rightEmpty.style.display='none';
+  rightContent.style.display='flex';
+
+  pageRows.forEach(row=>{
+    addFileResult({filename: row.filename, result: row});
+  });
+
+  if(bid){
+    currentBatchId=bid;
+    dlBtn.style.display='flex';
+  }
+}
+
+async function loadResults(bid, retries=3){
+  let rows;
+  for(let attempt=0;attempt<retries;attempt++){
+    try{
+      const r=await fetch(apiUrl('batch/'+bid+'/results'));
+      if(!r.ok){
+        if(attempt<retries-1){await new Promise(t=>setTimeout(t,2000));continue;}
+        errMsg.textContent='Ошибка загрузки результатов ('+r.status+')';
+        errMsg.style.display='block';
+        return;
+      }
+      const d=await r.json();
+      rows=(d.results||[]).map((item,i)=>({
+        id:i+1,
+        filename:item.filename||'',
+        page:item.page||item.pages||'',
+        duration_ms:null,
+        result:item.extracted||item,
+      }));
+      break;
+    }catch(e){
+      if(attempt<retries-1){await new Promise(t=>setTimeout(t,2000));continue;}
+      errMsg.textContent='Не удалось загрузить результаты: '+e.message;
+      errMsg.style.display='block';
+      return;
+    }
+  }
+  renderResultsFeed(rows,{bid,title:'\u041f\u0430\u043a\u0435\u0442 #'+bid+' \u2014 '+rows.length+' \u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442\u043e\u0432'});
+}
+
+function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML}
+
+/* === EXCEL ON DEMAND === */
+let _excelGenerating=false;
+async function generateAndDownload(){
+  if(_excelGenerating)return;
+  const bid=currentBatchId;
+  if(!bid)return;
+  _excelGenerating=true;
+  const origText=dlBtn.innerHTML;
+  dlBtn.innerHTML='<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width:18px;height:18px;animation:spin 1s linear infinite"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg> Генерация...';
+  try{
+    const r=await fetch(apiUrl('batch/'+bid+'/generate-excel'),{method:'POST'});
+    const d=await r.json();
+    if(d.ok){
+      window.location.href=apiUrl('batch/'+bid+'/excel');
+    }else{
+      alert('Ошибка: '+(d.detail||'неизвестная'));
+    }
+  }catch(e){
+    alert('Ошибка генерации Excel');
+  }finally{
+    dlBtn.innerHTML=origText;
+    _excelGenerating=false;
+  }
+}
+
+
+/* === MODEL SELECTOR === */
+async function loadModels(){
+  try{
+    const r=await fetch(apiUrl('models'));
+    if(!r.ok) return;
+    const models=await r.json();
+    const sel=$('modelSelect');
+    if(!sel) return;
+    sel.innerHTML='';
+    models.forEach(m=>{
+      const opt=document.createElement('option');
+      opt.value=m.id;
+      opt.textContent=m.name+(m.vram_gb?' ('+m.vram_gb+'GB)':'');
+      opt.title=m.description;
+      sel.appendChild(opt);
+    });
+    // Set current selection from status
+    const sr=await fetch(apiUrl('model/status'));
+    const sd=await sr.json();
+    if(sd.active_model_id) sel.value=sd.active_model_id;
+    sel.disabled=sd.status==='running'||sd.status==='starting';
+    const nb=$('navBadge');
+    if(nb&&sd.model_name) nb.textContent=sd.model_name;
+  }catch(e){console.error('loadModels',e)}
+}
+
+async function onModelSelectChange(modelId){
+  if(!modelId) return;
+  const sel=$('modelSelect');
+  if(sel) sel.disabled=true;
+  try{
+    await fetch(apiUrl('model/select'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model_id:modelId})});
+    const nb=$('navBadge');
+    const models_r=await fetch(apiUrl('models'));
+    if(models_r.ok){
+      const models=await models_r.json();
+      const m=models.find(x=>x.id===modelId);
+      if(m&&nb) nb.textContent=m.name;
+    }
+  }catch(e){console.error('onModelSelectChange',e)}
+  finally{if(sel) sel.disabled=false;}
+}
+
+loadModels();
+
+/* === MODEL MANAGEMENT === */
+async function checkModelStatus(){
+  try{
+    const r=await fetch(apiUrl('model/status'));
+    const d=await r.json();
+    _modelStatus=d.status;
+    updateModelUI(d.status, d);
+  }catch(e){_modelStatus='error';updateModelUI('error')}
+}
+
+function updateModelUI(status, statusData){
+  /* statusData = full object from /api/model/status */
+  if(statusData){
+    const sel=$('modelSelect');
+    const nb=$('navBadge');
+    if(sel && statusData.active_model_id){
+      sel.value=statusData.active_model_id;
+      sel.disabled=status==='running'||status==='starting';
+    }
+    if(nb && statusData.model_name) nb.textContent=statusData.model_name;
+  }
+  const dot=$('modelDot'),lbl=$('modelLabel'),btn=$('modelBtn');
+  if(status==='running'){
+    dot.style.background='var(--green)';dot.style.boxShadow='0 0 8px rgba(34,197,94,.4)';
+    dot.style.animation='none';
+    lbl.style.color='var(--green)';lbl.textContent='Модель загружена';
+    btn.textContent='\u0412\u044b\u0433\u0440\u0443\u0437\u0438\u0442\u044c';btn.style.borderColor='rgba(239,68,68,.3)';btn.style.color='var(--red)';
+    btn.disabled=false;
+  }else if(status==='starting'){
+    dot.style.background='var(--amber)';dot.style.boxShadow='0 0 8px rgba(245,158,11,.4)';
+    dot.style.animation='pulse 1.5s infinite';
+    lbl.style.color='var(--amber)';lbl.textContent='\u0417\u0430\u0433\u0440\u0443\u0437\u043a\u0430...';
+    btn.textContent='\u041f\u043e\u0434\u043e\u0436\u0434\u0438\u0442\u0435';btn.style.borderColor='var(--border)';btn.style.color='var(--text-3)';
+    btn.disabled=true;
+  }else{
+    dot.style.background='var(--text-3)';dot.style.boxShadow='none';dot.style.animation='none';
+    lbl.style.color='var(--text-3)';lbl.textContent='Видеокарта свободна';
+    btn.textContent='\u0417\u0430\u0433\u0440\u0443\u0437\u0438\u0442\u044c';btn.style.borderColor='rgba(34,197,94,.3)';btn.style.color='var(--green)';
+    btn.disabled=false;
+  }
+}
+
+async function toggleModel(){
+  const btn=$('modelBtn');
+  const isRunning=btn.textContent==='\u0412\u044b\u0433\u0440\u0443\u0437\u0438\u0442\u044c';
+  btn.disabled=true;btn.textContent='...';
+  try{
+    const endpoint=isRunning?apiUrl('model/unload'):apiUrl('model/load');
+    updateModelUI(isRunning?'stopping':'starting');
+    const r=await fetch(endpoint,{method:'POST'});
+    const d=await r.json();
+    if(!d.ok&&d.status){updateModelUI(d.status, d)}
+    else{await checkModelStatus()}
+  }catch(e){
+    await checkModelStatus();
+  }
+}
+
+checkModelStatus();
+setInterval(checkModelStatus,10000);
+setInterval(loadBatchHistory,15000);
+
+/* === CONCURRENCY CONTROL === */
+const concInput=$('concurrencyInput'), concBtn=$('concurrencyBtn'), concMsg=$('concurrencyMsg');
+let _concMsgTimer=0;
+function showConcMsg(text,ok){
+  concMsg.textContent=text;
+  concMsg.style.color=ok?'var(--green)':'var(--red, #e55)';
+  concMsg.style.opacity='1';
+  clearTimeout(_concMsgTimer);
+  _concMsgTimer=setTimeout(()=>{concMsg.style.opacity='0'},2500);
+}
+(async()=>{
+  try{
+    const r=await fetch(apiUrl('settings/concurrency'));
+    if(r.ok){const d=await r.json();concInput.value=d.concurrency;}
+  }catch(e){}
+})();
+async function applyConcurrency(){
+  const v=parseInt(concInput.value,10);
+  if(isNaN(v)||v<1||v>8){showConcMsg('1-8',false);return}
+  concBtn.disabled=true;concBtn.textContent='...';
+  try{
+    const r=await fetch(apiUrl('settings/concurrency'),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({concurrency:v})});
+    if(r.ok){const d=await r.json();concInput.value=d.concurrency;showConcMsg(d.concurrency+' OK',true);}
+    else{const e=await r.json().catch(()=>({}));showConcMsg(e.detail||'Ошибка',false);}
+  }catch(e){showConcMsg('Сбой связи',false)}
+  finally{concBtn.disabled=false;concBtn.textContent='OK'}
+}
+concBtn.onclick=applyConcurrency;
+concInput.onkeydown=e=>{if(e.key==='Enter')applyConcurrency();};
+
+/* === GPU STATS === */
+async function pollGpuStats(){
+  try{
+    const r=await fetch(apiUrl('gpu/stats'));
+    if(!r.ok){gpuWidget.classList.add('hidden');return}
+    const d=await r.json();
+    if(d.error){gpuWidget.classList.add('hidden');return}
+    gpuWidget.classList.remove('hidden');
+    const usedGb=(d.vram_used_mb/1024).toFixed(1);
+    const totalGb=(d.vram_total_mb/1024).toFixed(1);
+    const pct=Math.round(d.vram_used_mb/d.vram_total_mb*100);
+    gpuVramText.textContent=`${usedGb}/${totalGb} GB`;
+    gpuVramFill.style.width=pct+'%';
+    gpuVramFill.style.background=pct>90?'var(--red)':pct>70?'var(--amber)':'var(--accent)';
+    gpuUtilText.textContent=d.gpu_util+'%';
+    gpuTempText.textContent=d.temp_c+'\u00b0C';
+  }catch(e){gpuWidget.classList.add('hidden')}
+}
+pollGpuStats();
+setInterval(pollGpuStats,5000);
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   CHAT WITH VLM
+   ═══════════════════════════════════════════════════════════════════ */
+
+const chatDocSelect=$('chatDocSelect'),
+      chatUploadZone=$('chatUploadZone'), chatFileInput=$('chatFileInput'),
+      chatDocInfo=$('chatDocInfo'),
+      chatPagePreview=$('chatPagePreview'),
+      chatPageNav=$('chatPageNav'), chatPageLabel=$('chatPageLabel'),
+      chatPrevPage=$('chatPrevPage'), chatNextPage=$('chatNextPage'),
+      chatMessages=$('chatMessages'), chatEmpty=$('chatEmpty'),
+      chatInput=$('chatInput'), chatSendBtn=$('chatSendBtn');
+
+let _chatDocs=[];
+let _chatCurrentDoc=null;
+let _chatCurrentPage=0;
+let _chatSessionId=null;
+let _chatStreaming=false;
+let _chatInitialized=false;
+let _chatPendingImages=[];
+const CHAT_MAX_IMAGES=5;
+
+function escHtml(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+
+function updateChatSendBtn(){
+  const hasText=chatInput.value.trim().length>0;
+  const hasImages=_chatPendingImages.length>0;
+  chatSendBtn.disabled=_chatStreaming||(!hasText&&!hasImages);
+}
+
+function initChatView(){
+  if(!_chatInitialized){
+    _chatInitialized=true;
+    chatUploadZone.onclick=()=>chatFileInput.click();
+    chatFileInput.onchange=handleChatUpload;
+    chatDocSelect.onchange=handleChatDocSelect;
+    chatPrevPage.onclick=()=>chatNavigatePage(-1);
+    chatNextPage.onclick=()=>chatNavigatePage(1);
+    chatSendBtn.onclick=sendChatMessage;
+    chatInput.onkeydown=e=>{
+      if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChatMessage()}
+    };
+    chatInput.oninput=()=>{autoresizeChatInput();updateChatSendBtn()};
+
+    // Attach button
+    $('chatAttachBtn').onclick=()=>$('chatAttachInput').click();
+    $('chatAttachInput').onchange=function(){
+      addChatAttachments(Array.from(this.files));
+      this.value='';
+    };
+
+    // Drag & drop
+    const area=$('chatInputArea');
+    area.addEventListener('dragover',e=>{e.preventDefault();$('chatDropOverlay').classList.add('active')});
+    area.addEventListener('dragleave',e=>{e.preventDefault();$('chatDropOverlay').classList.remove('active')});
+    area.addEventListener('drop',e=>{
+      e.preventDefault();
+      $('chatDropOverlay').classList.remove('active');
+      const files=Array.from(e.dataTransfer.files).filter(f=>f.type.startsWith('image/')||f.type==='application/pdf');
+      addChatAttachments(files);
+    });
+
+    // Paste handler
+    chatInput.addEventListener('paste',e=>{
+      const items=e.clipboardData?.items;
+      if(!items)return;
+      const files=[];
+      for(const item of items){
+        if(item.type.startsWith('image/')){const f=item.getAsFile();if(f)files.push(f)}
+      }
+      if(files.length>0){e.preventDefault();addChatAttachments(files)}
+    });
+  }
+  loadChatDocuments();
+  updateChatSendBtn();
+}
+
+function addChatAttachments(files){
+  for(const f of files){
+    if(_chatPendingImages.length>=CHAT_MAX_IMAGES)break;
+    if(f.type==='application/pdf'){
+      _chatPendingImages.push({file:f,dataUrl:null,isPdf:true,name:f.name});
+      renderChatAttachPreviews();
+      updateChatSendBtn();
+      continue;
+    }
+    if(!f.type.startsWith('image/'))continue;
+    const reader=new FileReader();
+    reader.onload=()=>{
+      _chatPendingImages.push({file:f,dataUrl:reader.result,isPdf:false,name:f.name});
+      renderChatAttachPreviews();
+      updateChatSendBtn();
+    };
+    reader.readAsDataURL(f);
+  }
+}
+
+function renderChatAttachPreviews(){
+  const c=$('chatAttachPreview');
+  if(_chatPendingImages.length===0){c.style.display='none';c.innerHTML='';return}
+  c.style.display='flex';
+  c.innerHTML='';
+  _chatPendingImages.forEach((item,i)=>{
+    const thumb=document.createElement('div');
+    thumb.className='chat-attach-thumb';
+    if(item.isPdf){
+      thumb.innerHTML='<div class="cat-pdf">PDF</div>';
+    }else if(item.dataUrl){
+      thumb.innerHTML='<img src="'+item.dataUrl+'" alt="">';
+    }
+    const rm=document.createElement('button');
+    rm.className='cat-remove';
+    rm.textContent='\u00d7';
+    rm.onclick=()=>{_chatPendingImages.splice(i,1);renderChatAttachPreviews();updateChatSendBtn()};
+    thumb.appendChild(rm);
+    c.appendChild(thumb);
+  });
+}
+
+function autoresizeChatInput(){
+  chatInput.style.height='auto';
+  chatInput.style.height=Math.min(chatInput.scrollHeight,140)+'px';
+}
+
+async function loadChatDocuments(){
+  try{
+    const r=await fetch(apiUrl('chat/documents'));
+    if(!r.ok)return;
+    _chatDocs=await r.json();
+    chatDocSelect.innerHTML='<option value="">Выберите документ...</option>';
+    _chatDocs.forEach((d,i)=>{
+      const opt=document.createElement('option');
+      opt.value=i;
+      opt.textContent=d.filename+' (пакет #'+d.batch_id+', '+d.pages+' стр.)';
+      chatDocSelect.appendChild(opt);
+    });
+  }catch(e){console.warn('chat docs load failed',e)}
+}
+
+function handleChatDocSelect(){
+  const idx=chatDocSelect.value;
+  if(idx===''){_chatCurrentDoc=null;resetChatUI();return}
+  const doc=_chatDocs[parseInt(idx)];
+  selectChatDocument(doc.batch_id, doc.filename, doc.pages);
+}
+
+async function handleChatUpload(){
+  const file=chatFileInput.files[0];
+  if(!file)return;
+  chatDocInfo.textContent='Загрузка...';
+  const fd=new FormData();
+  fd.append('file',file);
+  try{
+    const r=await fetch(apiUrl('chat/upload'),{method:'POST',body:fd});
+    if(!r.ok){const e=await r.json();chatDocInfo.textContent='Ошибка: '+(e.detail||'');return}
+    const d=await r.json();
+    const newDoc={batch_id:'direct',filename:d.filename,pages:d.pages};
+    _chatDocs.push(newDoc);
+    const opt=document.createElement('option');
+    opt.value=_chatDocs.length-1;
+    opt.textContent=d.filename+' (загружен, '+d.pages+' стр.)';
+    chatDocSelect.appendChild(opt);
+    chatDocSelect.value=_chatDocs.length-1;
+    selectChatDocument('direct', d.filename, d.pages);
+  }catch(e){chatDocInfo.textContent='Ошибка загрузки'}
+  chatFileInput.value='';
+}
+
+function selectChatDocument(batchId, filename, pages){
+  _chatCurrentDoc={batch_id:batchId, filename:filename, pages:pages};
+  _chatCurrentPage=0;
+  _chatSessionId=null;
+  chatDocInfo.textContent=filename+' — '+pages+' стр.';
+  chatPageNav.style.display='flex';
+  updateChatPageNav();
+  loadChatPagePreview();
+  resetChatMessages();
+  updateChatSendBtn();
+}
+
+function resetChatUI(){
+  _chatCurrentDoc=null;
+  _chatCurrentPage=0;
+  _chatSessionId=null;
+  chatDocInfo.textContent='';
+  chatPageNav.style.display='none';
+  chatPagePreview.innerHTML='<div class="cpp-empty">Выберите документ или начните свободный чат</div>';
+  resetChatMessages();
+  updateChatSendBtn();
+}
+
+function resetChatMessages(){
+  chatMessages.innerHTML='';
+  chatMessages.appendChild(createChatEmpty());
+  _chatSessionId=null;
+}
+
+function createChatEmpty(){
+  const div=document.createElement('div');
+  div.className='chat-empty';
+  div.innerHTML='<svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg><p>Чат с ассистентом</p><small>Задавайте вопросы, прикрепляйте изображения или выберите документ для контекста.</small>';
+  return div;
+}
+
+function updateChatPageNav(){
+  if(!_chatCurrentDoc)return;
+  chatPageLabel.textContent=(_chatCurrentPage+1)+' / '+_chatCurrentDoc.pages;
+  chatPrevPage.disabled=_chatCurrentPage<=0;
+  chatNextPage.disabled=_chatCurrentPage>=_chatCurrentDoc.pages-1;
+}
+
+function chatNavigatePage(delta){
+  if(!_chatCurrentDoc)return;
+  const newPage=_chatCurrentPage+delta;
+  if(newPage<0||newPage>=_chatCurrentDoc.pages)return;
+  _chatCurrentPage=newPage;
+  updateChatPageNav();
+  loadChatPagePreview();
+  resetChatMessages();
+}
+
+function loadChatPagePreview(){
+  if(!_chatCurrentDoc)return;
+  const url=apiUrl('page-image/'+_chatCurrentDoc.batch_id+'/'+encodeURIComponent(_chatCurrentDoc.filename)+'/'+_chatCurrentPage);
+  chatPagePreview.innerHTML='<img src="'+url+'" alt="Страница '+(_chatCurrentPage+1)+'" loading="lazy">';
+}
+
+async function ensureChatSession(){
+  if(_chatSessionId)return;
+  try{
+    const body={};
+    if(_chatCurrentDoc){
+      body.batch_id=_chatCurrentDoc.batch_id;
+      body.filename=_chatCurrentDoc.filename;
+      body.page=_chatCurrentPage;
+    }
+    const r=await fetch(apiUrl('chat/start'),{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(body),
+    });
+    if(!r.ok)throw new Error('start failed');
+    const d=await r.json();
+    _chatSessionId=d.chat_id;
+  }catch(e){
+    appendChatError('Не удалось создать сессию чата');
+    throw e;
+  }
+}
+
+function appendChatBubble(role, text){
+  const empty=chatMessages.querySelector('.chat-empty');
+  if(empty)empty.remove();
+  const div=document.createElement('div');
+  div.className='chat-msg '+role;
+  if(text)div.textContent=text;
+  chatMessages.appendChild(div);
+  chatMessages.scrollTop=chatMessages.scrollHeight;
+  return div;
+}
+
+function appendChatError(text){
+  const empty=chatMessages.querySelector('.chat-empty');
+  if(empty)empty.remove();
+  const div=document.createElement('div');
+  div.className='chat-msg error';
+  div.textContent=text;
+  chatMessages.appendChild(div);
+  chatMessages.scrollTop=chatMessages.scrollHeight;
+}
+
+async function sendChatMessage(){
+  if(_chatStreaming)return;
+  const text=chatInput.value.trim();
+  const images=[..._chatPendingImages];
+
+  if(!text&&images.length===0)return;
+
+  chatInput.value='';
+  chatInput.style.height='auto';
+  _chatPendingImages=[];
+  renderChatAttachPreviews();
+  updateChatSendBtn();
+
+  // Build user bubble with optional images
+  const userBubble=appendChatBubble('user','');
+  let bubbleHtml='';
+  if(images.length>0){
+    bubbleHtml+='<div class="chat-msg-images">';
+    images.forEach(item=>{
+      if(item.isPdf){
+        bubbleHtml+='<span class="cmi-pdf">'+escHtml(item.name)+'</span>';
+      }else if(item.dataUrl){
+        bubbleHtml+='<img src="'+item.dataUrl+'" alt="">';
+      }
+    });
+    bubbleHtml+='</div>';
+  }
+  if(text)bubbleHtml+=escHtml(text);
+  userBubble.innerHTML=bubbleHtml;
+
+  try{
+    await ensureChatSession();
+  }catch(e){return}
+
+  _chatStreaming=true;
+  chatInput.disabled=true;
+  chatSendBtn.disabled=true;
+
+  const bubble=appendChatBubble('assistant','');
+  bubble.innerHTML='<span class="typing-cursor"></span>';
+
+  let fullText='';
+
+  try{
+    let response;
+    if(images.length>0){
+      const fd=new FormData();
+      fd.append('message',text);
+      images.forEach((item,i)=>fd.append('image'+i,item.file));
+      response=await fetch(apiUrl('chat/'+_chatSessionId+'/message'),{method:'POST',body:fd});
+    }else{
+      response=await fetch(apiUrl('chat/'+_chatSessionId+'/message'),{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({message:text}),
+      });
+    }
+
+    if(!response.ok){
+      const err=await response.json().catch(()=>({detail:'Ошибка сервера'}));
+      bubble.remove();
+      appendChatError(err.detail||'Ошибка отправки');
+      return;
+    }
+
+    const reader=response.body.getReader();
+    const decoder=new TextDecoder();
+    let buf='';
+    let currentEvent='';
+
+    while(true){
+      const {done,value}=await reader.read();
+      if(done)break;
+      buf+=decoder.decode(value,{stream:true});
+      const lines=buf.split('\n');
+      buf=lines.pop()||'';
+      for(const line of lines){
+        if(line.startsWith('event: ')){
+          currentEvent=line.slice(7).trim();
+        }else if(line.startsWith('data: ')){
+          try{
+            const payload=JSON.parse(line.slice(6));
+            if(currentEvent==='delta'&&payload.text!==undefined){
+              fullText+=payload.text;
+              bubble.textContent=fullText;
+              chatMessages.scrollTop=chatMessages.scrollHeight;
+            }else if(currentEvent==='done'&&payload.text){
+              fullText=payload.text;
+              bubble.textContent=fullText;
+            }else if(currentEvent==='error'){
+              bubble.remove();
+              appendChatError(payload.detail||'Ошибка модели');
+              fullText='__error__';
+            }
+          }catch(e){}
+          currentEvent='';
+        }
+      }
+    }
+    if(fullText&&fullText!=='__error__'){
+      bubble.textContent=fullText;
+    }else if(fullText!=='__error__'){
+      bubble.remove();
+      appendChatError('Модель не вернула ответ');
+    }
+  }catch(e){
+    bubble.remove();
+    appendChatError('Ошибка связи: '+e.message);
+  }finally{
+    _chatStreaming=false;
+    chatInput.disabled=false;
+    chatSendBtn.disabled=false;
+    chatInput.focus();
+    chatMessages.scrollTop=chatMessages.scrollHeight;
+    updateChatSendBtn();
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════
+   OCR / Searchable PDF
+   ═══════════════════════════════════════════════════ */
+
+let _ocrFiles = [];
+let _ocrBatchId = null;
+let _ocrProcessing = false;
+let _ocrEventSource = null;
+let _ocrUploadedFiles = new Set();
+
+const ocrDropZone = $('ocrDropZone');
+const ocrFileInput = $('ocrFileInput');
+const ocrFileList = $('ocrFileList');
+const ocrStartBtn = $('ocrStartBtn');
+const ocrClearBtn = $('ocrClearBtn');
+const ocrProgress = $('ocrProgress');
+const ocrProgressText = $('ocrProgressText');
+const ocrProgressFill = $('ocrProgressFill');
+const ocrResults = $('ocrResults');
+const ocrResultsList = $('ocrResultsList');
+
+ocrDropZone.addEventListener('click', () => ocrFileInput.click());
+ocrFileInput.addEventListener('change', e => { ocrAddFiles(e.target.files); ocrFileInput.value=''; });
+ocrDropZone.addEventListener('dragover', e => { e.preventDefault(); ocrDropZone.classList.add('over'); });
+ocrDropZone.addEventListener('dragleave', () => ocrDropZone.classList.remove('over'));
+ocrDropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  ocrDropZone.classList.remove('over');
+  const files = [];
+  for (const f of e.dataTransfer.files) {
+    if (f.name.toLowerCase().endsWith('.pdf')) files.push(f);
+  }
+  if (files.length) ocrAddFiles(files);
+});
+
+function ocrAddFiles(fileList) {
+  for (const f of fileList) {
+    if (f.name.toLowerCase().endsWith('.pdf') && !_ocrFiles.find(x => x.name === f.name)) {
+      _ocrFiles.push(f);
+    }
+  }
+  ocrRenderFiles();
+}
+
+function ocrRenderFiles() {
+  ocrFileList.innerHTML = '';
+  _ocrFiles.forEach((f, i) => {
+    const div = document.createElement('div');
+    div.className = 'ocr-file-item';
+    const isProcessed = _ocrUploadedFiles.has(f.name);
+    const statusText = isProcessed ? '\u0413\u043e\u0442\u043e\u0432\u043e' : '\u0413\u043e\u0442\u043e\u0432';
+    const statusClass = isProcessed ? 'ocr-file-status done' : 'ocr-file-status';
+    div.innerHTML = '<span class="ocr-file-name">' + esc(f.name) + '</span>' +
+      '<span class="' + statusClass + '" id="ocrSt_' + i + '">' + statusText + '</span>' +
+      '<div class="ocr-file-actions" id="ocrAct_' + i + '"></div>';
+    ocrFileList.appendChild(div);
+  });
+  const hasNewFiles = _ocrFiles.some(f => !_ocrUploadedFiles.has(f.name));
+  ocrStartBtn.disabled = !hasNewFiles || _ocrProcessing;
+  ocrClearBtn.style.display = _ocrFiles.length > 0 ? '' : 'none';
+}
+
+ocrClearBtn.onclick = () => {
+  if (_ocrProcessing) return;
+  _ocrFiles = [];
+  _ocrBatchId = null;
+  _ocrUploadedFiles = new Set();
+  ocrFileList.innerHTML = '';
+  ocrStartBtn.disabled = true;
+  ocrClearBtn.style.display = 'none';
+  ocrProgress.style.display = 'none';
+  ocrResults.style.display = 'none';
+  ocrResultsList.innerHTML = '';
+  $('ocrPreview').style.display = 'none';
+  $('ocrTagsNames').innerHTML = '';
+  $('ocrTagsDates').innerHTML = '';
+  $('ocrTagsDocuments').innerHTML = '';
+  $('ocrOverlayBtn').style.display = 'none';
+  _ocrPreviewData = {};
+  _ocrPreviewFile = '';
+  _ocrPreviewPage = 1;
+};
+
+ocrStartBtn.onclick = async () => {
+  if (_ocrProcessing || !_ocrFiles.length) return;
+
+  // Determine which files are new (not yet uploaded to current batch)
+  const newFiles = _ocrBatchId
+    ? _ocrFiles.filter(f => !_ocrUploadedFiles.has(f.name))
+    : [..._ocrFiles];
+
+  if (newFiles.length === 0) {
+    ocrProgressText.textContent = 'Нет новых файлов для обработки';
+    ocrProgress.style.display = 'block';
+    return;
+  }
+
+  _ocrProcessing = true;
+  ocrStartBtn.disabled = true;
+  ocrProgress.style.display = 'block';
+  ocrProgressFill.style.width = '0';
+
+  try {
+    // Create batch only if we don't have one yet
+    if (!_ocrBatchId) {
+      ocrProgressText.textContent = 'Создание пакета...';
+      ocrResults.style.display = 'none';
+      ocrResultsList.innerHTML = '';
+      const ocrType = document.getElementById('ocrModeSelect').value;
+      const createResp = await fetch(apiUrl('batch/create-ocr'), {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ocr_type: ocrType})
+      });
+      const createData = await createResp.json();
+      _ocrBatchId = createData.batch_id;
+    }
+
+    // Upload only NEW files
+    ocrProgressText.textContent = 'Загрузка файлов...';
+    const chunkSize = 3;
+    for (let i = 0; i < newFiles.length; i += chunkSize) {
+      const chunk = newFiles.slice(i, i + chunkSize);
+      const formData = new FormData();
+      chunk.forEach(f => formData.append('files', f));
+      await fetch(apiUrl('batch/' + _ocrBatchId + '/upload'), { method: 'POST', body: formData });
+    }
+
+    // Track uploaded files
+    newFiles.forEach(f => _ocrUploadedFiles.add(f.name));
+
+    // Signal upload complete
+    await fetch(apiUrl('batch/' + _ocrBatchId + '/upload-complete'), { method: 'POST' });
+
+    // Track progress via SSE
+    ocrProgressText.textContent = 'Обработка...';
+    ocrTrackProgress(_ocrBatchId);
+
+  } catch (e) {
+    ocrProgressText.textContent = 'Ошибка: ' + e.message;
+    _ocrProcessing = false;
+    ocrStartBtn.disabled = false;
+  }
+};
+
+let _ocrPreviewData = {};  // {filename: {pages: {pageNum: {text, lines}}, maxPage: 0}}
+let _ocrPreviewFile = '';
+let _ocrPreviewPage = 1;
+
+function ocrTrackProgress(batchId) {
+  if (_ocrEventSource) { _ocrEventSource.close(); _ocrEventSource = null; }
+
+  // Show preview panel immediately
+  ocrResults.style.display = 'block';
+  $('ocrPreview').style.display = 'block';
+
+  // Init preview data for new files only (preserve existing data for already-processed files)
+  _ocrFiles.forEach(f => {
+    if (!_ocrPreviewData[f.name]) {
+      _ocrPreviewData[f.name] = { pages: {}, maxPage: 0 };
+    }
+  });
+  if (_ocrFiles.length > 0 && !_ocrPreviewFile) {
+    _ocrPreviewFile = _ocrFiles[0].name;
+  }
+
+  // Populate file selector
+  const fileSelect = $('ocrPreviewFile');
+  fileSelect.innerHTML = '';
+  _ocrFiles.forEach(f => {
+    const opt = document.createElement('option');
+    opt.value = f.name;
+    opt.textContent = f.name;
+    fileSelect.appendChild(opt);
+  });
+  fileSelect.value = _ocrPreviewFile;
+
+  _ocrPreviewPage = 1;
+  ocrRenderPreview();
+
+  const url = apiUrl('batch/' + batchId + '/progress');
+  const es = new EventSource(url);
+  _ocrEventSource = es;
+
+  // Real-time: capture page_result events with OCR text
+  es.addEventListener('page_result', e => {
+    try {
+      const d = JSON.parse(e.data);
+      const fn = d.filename;
+      const pg = d.page;
+      const result = d.result || {};
+      const ocrText = result.ocr_text || '';
+      const lines = result.lines || [];
+
+      if (!_ocrPreviewData[fn]) _ocrPreviewData[fn] = { pages: {}, maxPage: 0 };
+      _ocrPreviewData[fn].pages[pg] = { text: ocrText, lines: lines };
+      _ocrPreviewData[fn].maxPage = Math.max(_ocrPreviewData[fn].maxPage, pg);
+
+      // Auto-navigate to the latest page of the current file
+      if (fn === _ocrPreviewFile) {
+        _ocrPreviewPage = pg;
+        ocrRenderPreview();
+      }
+    } catch(err) { console.warn('page_result parse error', err); }
+  });
+
+  es.addEventListener('progress', e => {
+    try {
+      const d = JSON.parse(e.data);
+      const pct = d.total_pages > 0 ? Math.round(d.pages_done / d.total_pages * 100) : 0;
+      ocrProgressFill.style.width = pct + '%';
+
+      let statusText = d.pages_done + ' / ' + d.total_pages + ' стр.';
+      if (d.processing_time) statusText += ' \u2014 ' + d.processing_time;
+      if (d.avg_page_time) statusText += ' (' + d.avg_page_time + ')';
+      ocrProgressText.textContent = statusText;
+
+      // Update per-file statuses
+      if (d.files) {
+        d.files.forEach((fi, idx) => {
+          const stEl = document.getElementById('ocrSt_' + idx);
+          if (stEl) {
+            if (fi.status === 'done') { stEl.textContent = '\u0413\u043e\u0442\u043e\u0432\u043e'; stEl.className = 'ocr-file-status done'; }
+            else if (fi.status === 'error') { stEl.textContent = fi.error || '\u041e\u0448\u0438\u0431\u043a\u0430'; stEl.className = 'ocr-file-status error'; }
+            else if (fi.status === 'processing') { stEl.textContent = fi.pages_done + '/' + fi.pages + ' \u0441\u0442\u0440.'; stEl.className = 'ocr-file-status processing'; }
+          }
+        });
+      }
+
+      if (d.status === 'done' || d.status === 'error') {
+        es.close();
+        _ocrEventSource = null;
+        _ocrProcessing = false;
+        ocrStartBtn.disabled = false;
+        ocrProgressFill.style.width = '100%';
+
+        if (d.status === 'done') {
+          ocrProgressText.textContent = '\u0413\u043e\u0442\u043e\u0432\u043e! ' + statusText;
+          ocrShowDownloads(batchId);
+        } else {
+          ocrProgressText.textContent = '\u041e\u0448\u0438\u0431\u043a\u0430 \u043e\u0431\u0440\u0430\u0431\u043e\u0442\u043a\u0438';
+        }
+      }
+    } catch (err) {}
+  });
+
+  es.onerror = () => {
+    es.close();
+    _ocrEventSource = null;
+    if (_ocrProcessing) {
+      setTimeout(() => { if (_ocrProcessing) ocrTrackProgress(batchId); }, 2000);
+    }
+  };
+}
+
+async function ocrShowDownloads(batchId) {
+  ocrResultsList.innerHTML = '';
+  // Show export buttons for each file (no auto PDF generation)
+  _ocrFiles.forEach(f => {
+    if (!_ocrUploadedFiles.has(f.name)) return;
+    const div = document.createElement('div');
+    div.className = 'ocr-file-item';
+    div.style.flexWrap = 'wrap';
+    const expBase = apiUrl('batch/' + batchId + '/export/' + encodeURIComponent(f.name));
+    div.innerHTML = '<span class="ocr-file-name">' + esc(f.name) + '</span>' +
+      '<div class="ocr-file-actions" style="flex-wrap:wrap">' +
+        '<a href="' + expBase + '?format=txt" class="ocr-dl-btn" download>TXT</a>' +
+        '<a href="' + expBase + '?format=json" class="ocr-dl-btn" download>JSON</a>' +
+        '<a href="' + expBase + '?format=tags-txt" class="ocr-dl-btn" download>Теги TXT</a>' +
+        '<a href="' + expBase + '?format=tags-json" class="ocr-dl-btn" download>Теги JSON</a>' +
+      '</div>';
+    ocrResultsList.appendChild(div);
+  });
+
+  // Show overlay button
+  $('ocrOverlayBtn').style.display = '';
+
+  // Load tags for current preview file
+  ocrLoadTags();
+}
+
+function ocrRenderPreview() {
+  const fd = _ocrPreviewData[_ocrPreviewFile];
+  const maxPg = fd ? fd.maxPage : 0;
+  const total = maxPg || '?';
+  const pg = Math.max(1, _ocrPreviewPage);
+  _ocrPreviewPage = pg;
+
+  $('ocrPageLabel').textContent = pg + ' / ' + total;
+  $('ocrPrevPage').disabled = pg <= 1;
+  $('ocrNextPage').disabled = maxPg > 0 ? pg >= maxPg : true;
+
+  // Page image (always available from original PDF)
+  const imgUrl = apiUrl('batch/' + _ocrBatchId + '/page-image/' + encodeURIComponent(_ocrPreviewFile) + '/' + pg);
+  $('ocrPreviewImg').src = imgUrl;
+
+  // OCR text — render with table markup
+  const el = $('ocrPreviewText');
+  const pageData = fd && fd.pages[pg];
+  if (pageData) {
+    const lines = pageData.lines || [];
+    if (lines.length > 0) {
+      el.innerHTML = ocrRenderLines(lines);
+    } else if (pageData.text) {
+      el.textContent = pageData.text;
+    } else {
+      el.textContent = '(\u043f\u0443\u0441\u0442\u0430\u044f \u0441\u0442\u0440\u0430\u043d\u0438\u0446\u0430)';
+    }
+  } else {
+    el.textContent = '\u2026 \u043e\u0436\u0438\u0434\u0430\u043d\u0438\u0435 \u0440\u0430\u0441\u043f\u043e\u0437\u043d\u0430\u0432\u0430\u043d\u0438\u044f';
+  }
+}
+
+function ocrRenderLines(lines) {
+  // Group consecutive table_row lines into tables, text lines into paragraphs
+  let html = '';
+  let tableRows = [];
+
+  function flushTable() {
+    if (!tableRows.length) return;
+    html += '<table>';
+    tableRows.forEach((row, idx) => {
+      const cells = row.split('|').map(c => c.trim());
+      if (idx === 0) {
+        html += '<thead><tr>' + cells.map(c => '<th>' + esc(c) + '</th>').join('') + '</tr></thead><tbody>';
+      } else {
+        html += '<tr>' + cells.map(c => '<td>' + esc(c) + '</td>').join('') + '</tr>';
+      }
+    });
+    html += '</tbody></table>';
+    tableRows = [];
+  }
+
+  for (const line of lines) {
+    const type = line.type || 'text';
+    if (type === 'table_row') {
+      tableRows.push(line.text || '');
+    } else {
+      flushTable();
+      html += '<p>' + esc(line.text || '') + '</p>';
+    }
+  }
+  flushTable();
+  return html;
+}
+
+$('ocrPreviewFile').onchange = function() {
+  _ocrPreviewFile = this.value;
+  _ocrPreviewPage = 1;
+  ocrRenderPreview();
+  ocrLoadTags();
+};
+$('ocrPrevPage').onclick = () => { _ocrPreviewPage--; ocrRenderPreview(); };
+$('ocrNextPage').onclick = () => { _ocrPreviewPage++; ocrRenderPreview(); };
+
+// ── Overlay button ─────────────────────────────────────────────
+
+$('ocrOverlayBtn').onclick = async function() {
+  const btn = this;
+  btn.disabled = true;
+  btn.textContent = 'Генерация PDF...';
+  try {
+    const resp = await fetch(apiUrl('batch/' + _ocrBatchId + '/generate-searchable-pdf'), {method:'POST'});
+    const data = await resp.json();
+    if (data.files && data.files.length) {
+      data.files.forEach(f => {
+        const dlUrl = apiUrl('batch/' + _ocrBatchId + '/searchable-pdf/' + encodeURIComponent(f.filename));
+        const items = ocrResultsList.querySelectorAll('.ocr-file-item');
+        items.forEach(item => {
+          const nameEl = item.querySelector('.ocr-file-name');
+          if (nameEl && nameEl.textContent === f.filename) {
+            const actions = item.querySelector('.ocr-file-actions');
+            if (actions && !actions.querySelector('.ocr-pdf-dl')) {
+              const a = document.createElement('a');
+              a.href = dlUrl;
+              a.className = 'ocr-dl-btn primary ocr-pdf-dl';
+              a.download = '';
+              a.textContent = 'PDF';
+              actions.insertBefore(a, actions.firstChild);
+            }
+          }
+        });
+      });
+      btn.textContent = 'Готово!';
+    } else {
+      btn.textContent = 'Нет файлов';
+    }
+  } catch(e) {
+    btn.textContent = 'Ошибка';
+  }
+  setTimeout(() => { btn.disabled = false; btn.textContent = 'Наложить текст на PDF'; }, 2000);
+};
+
+// ── Tags panel ────────────────────────────────────────────────
+
+async function ocrLoadTags() {
+  if (!_ocrBatchId || !_ocrPreviewFile) return;
+  try {
+    const resp = await fetch(apiUrl('batch/' + _ocrBatchId + '/tags/' + encodeURIComponent(_ocrPreviewFile)));
+    const data = await resp.json();
+    const tags = data.tags || {names:[], dates:[], documents:[]};
+    ocrRenderTags(tags);
+  } catch(e) {}
+}
+
+function ocrRenderTags(tags) {
+  _renderTagList($('ocrTagsNames'), tags.names || [], 'names');
+  _renderTagList($('ocrTagsDates'), tags.dates || [], 'dates');
+  _renderTagList($('ocrTagsDocuments'), tags.documents || [], 'documents');
+}
+
+function _renderTagList(container, items, category) {
+  container.innerHTML = '';
+  if (!items.length) {
+    container.innerHTML = '<span style="font-size:12px;color:var(--text-3)">(нет)</span>';
+    return;
+  }
+  items.forEach((val, idx) => {
+    const item = document.createElement('div');
+    item.className = 'ocr-tag-item';
+    const input = document.createElement('input');
+    input.className = 'ocr-tag-input';
+    input.value = val;
+    input.style.width = Math.max(60, val.length * 8) + 'px';
+    input.dataset.original = val;
+    input.dataset.category = category;
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'ocr-tag-save';
+    saveBtn.textContent = '\u2714';
+    saveBtn.title = 'Сохранить и применить автозамену';
+    input.addEventListener('input', () => {
+      const changed = input.value !== input.dataset.original;
+      item.classList.toggle('edited', changed);
+      input.style.width = Math.max(60, input.value.length * 8) + 'px';
+    });
+    saveBtn.addEventListener('click', async () => {
+      const oldVal = input.dataset.original;
+      const newVal = input.value.trim();
+      if (!newVal || oldVal === newVal) return;
+      saveBtn.disabled = true;
+      saveBtn.textContent = '...';
+      try {
+        await fetch(apiUrl('batch/' + _ocrBatchId + '/tags/' + encodeURIComponent(_ocrPreviewFile)), {
+          method: 'PUT',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({old: oldVal, new: newVal, category: category})
+        });
+        // Regenerate PDF
+        await fetch(apiUrl('batch/' + _ocrBatchId + '/regenerate-pdf/' + encodeURIComponent(_ocrPreviewFile)), {method:'POST'});
+        input.dataset.original = newVal;
+        item.classList.remove('edited');
+        saveBtn.style.display = 'none';
+        // Reload OCR text preview for current page
+        const txtResp = await fetch(apiUrl('batch/' + _ocrBatchId + '/ocr-text/' + encodeURIComponent(_ocrPreviewFile)));
+        const txtData = await txtResp.json();
+        if (txtData.pages) {
+          txtData.pages.forEach(p => {
+            if (_ocrPreviewData[_ocrPreviewFile]) {
+              _ocrPreviewData[_ocrPreviewFile].pages[p.page] = {text: p.text, lines: p.lines};
+            }
+          });
+          ocrRenderPreview();
+        }
+      } catch(e) { console.error('Tag save failed', e); }
+      saveBtn.disabled = false;
+      saveBtn.textContent = '\u2714';
+    });
+    item.appendChild(input);
+    item.appendChild(saveBtn);
+    container.appendChild(item);
+  });
+}
+
+
+/* === PAGE RANGE CHIPS === */
+document.querySelectorAll('.page-range-chip').forEach(chip=>{
+  chip.onclick=()=>{
+    pageRangeInput.value=chip.dataset.val;
+    pageRangeInput.focus();
+  };
+});
+
+</script>
+</body>
+</html>

@@ -1,0 +1,1431 @@
+[
+  {
+    "id": "universal",
+    "name": "Универсальный",
+    "description": "Автоопределение типа документа, извлечение реквизитов двух сторон",
+    "fields": [
+      {
+        "key": "тип_документа",
+        "label": "Тип документа",
+        "type": "string"
+      },
+      {
+        "key": "номер_документа",
+        "label": "Номер документа",
+        "type": "string"
+      },
+      {
+        "key": "дата_документа",
+        "label": "Дата документа",
+        "type": "date"
+      },
+      {
+        "key": "контрагент1",
+        "label": "Контрагент1",
+        "type": "string"
+      },
+      {
+        "key": "контрагент1_инн",
+        "label": "ИНН",
+        "type": "inn"
+      },
+      {
+        "key": "контрагент1_кпп",
+        "label": "КПП",
+        "type": "kpp"
+      },
+      {
+        "key": "контрагент1_адрес",
+        "label": "Адрес",
+        "type": "string"
+      },
+      {
+        "key": "контрагент2",
+        "label": "Контрагент2",
+        "type": "string"
+      },
+      {
+        "key": "контрагент2_инн",
+        "label": "ИНН",
+        "type": "inn"
+      },
+      {
+        "key": "контрагент2_кпп",
+        "label": "КПП",
+        "type": "kpp"
+      },
+      {
+        "key": "контрагент2_адрес",
+        "label": "Адрес",
+        "type": "string"
+      },
+      {
+        "key": "ндс",
+        "label": "НДС",
+        "type": "number"
+      },
+      {
+        "key": "сумма_с_ндс",
+        "label": "Сумма с НДС",
+        "type": "number"
+      }
+    ],
+    "max_tokens": 1024,
+    "postprocessing": [
+      "split_inn_kpp",
+      "validate_inn",
+      "validate_kpp",
+      "clean_address",
+      "fix_doc_number"
+    ]
+  },
+  {
+    "id": "schet_faktura",
+    "name": "Счёт-фактура",
+    "description": "Извлечение данных из счетов-фактур",
+    "fields": [
+      {
+        "key": "тип_документа",
+        "label": "Тип документа",
+        "type": "string"
+      },
+      {
+        "key": "номер_документа",
+        "label": "Номер документа",
+        "type": "string"
+      },
+      {
+        "key": "дата_документа",
+        "label": "Дата документа",
+        "type": "date"
+      },
+      {
+        "key": "контрагент1",
+        "label": "Контрагент1",
+        "type": "string"
+      },
+      {
+        "key": "контрагент1_инн",
+        "label": "ИНН",
+        "type": "inn"
+      },
+      {
+        "key": "контрагент1_кпп",
+        "label": "КПП",
+        "type": "kpp"
+      },
+      {
+        "key": "контрагент1_адрес",
+        "label": "Адрес",
+        "type": "string"
+      },
+      {
+        "key": "контрагент2",
+        "label": "Контрагент2",
+        "type": "string"
+      },
+      {
+        "key": "контрагент2_инн",
+        "label": "ИНН",
+        "type": "inn"
+      },
+      {
+        "key": "контрагент2_кпп",
+        "label": "КПП",
+        "type": "kpp"
+      },
+      {
+        "key": "контрагент2_адрес",
+        "label": "Адрес",
+        "type": "string"
+      },
+      {
+        "key": "ндс",
+        "label": "НДС",
+        "type": "number"
+      },
+      {
+        "key": "сумма_с_ндс",
+        "label": "Сумма с НДС",
+        "type": "number"
+      }
+    ],
+    "max_tokens": 1024,
+    "postprocessing": [
+      "split_inn_kpp",
+      "validate_inn",
+      "validate_kpp",
+      "clean_address",
+      "fix_doc_number"
+    ]
+  },
+  {
+    "id": "upd",
+    "name": "УПД (Универсальный передаточный документ)",
+    "description": "Извлечение данных из УПД",
+    "fields": [
+      {
+        "key": "тип_документа",
+        "label": "Тип документа",
+        "type": "string"
+      },
+      {
+        "key": "номер_документа",
+        "label": "Номер документа",
+        "type": "string"
+      },
+      {
+        "key": "дата_документа",
+        "label": "Дата документа",
+        "type": "date"
+      },
+      {
+        "key": "контрагент1",
+        "label": "Контрагент1",
+        "type": "string"
+      },
+      {
+        "key": "контрагент1_инн",
+        "label": "ИНН",
+        "type": "inn"
+      },
+      {
+        "key": "контрагент1_кпп",
+        "label": "КПП",
+        "type": "kpp"
+      },
+      {
+        "key": "контрагент1_адрес",
+        "label": "Адрес",
+        "type": "string"
+      },
+      {
+        "key": "контрагент2",
+        "label": "Контрагент2",
+        "type": "string"
+      },
+      {
+        "key": "контрагент2_инн",
+        "label": "ИНН",
+        "type": "inn"
+      },
+      {
+        "key": "контрагент2_кпп",
+        "label": "КПП",
+        "type": "kpp"
+      },
+      {
+        "key": "контрагент2_адрес",
+        "label": "Адрес",
+        "type": "string"
+      },
+      {
+        "key": "ндс",
+        "label": "НДС",
+        "type": "number"
+      },
+      {
+        "key": "сумма_с_ндс",
+        "label": "Сумма с НДС",
+        "type": "number"
+      }
+    ],
+    "max_tokens": 1024,
+    "postprocessing": [
+      "split_inn_kpp",
+      "validate_inn",
+      "validate_kpp",
+      "clean_address",
+      "fix_doc_number"
+    ]
+  },
+  {
+    "id": "akt",
+    "name": "Акт выполненных работ",
+    "description": "Извлечение данных из актов выполненных работ/оказанных услуг",
+    "fields": [
+      {
+        "key": "тип_документа",
+        "label": "Тип документа",
+        "type": "string"
+      },
+      {
+        "key": "номер_документа",
+        "label": "Номер документа",
+        "type": "string"
+      },
+      {
+        "key": "дата_документа",
+        "label": "Дата документа",
+        "type": "date"
+      },
+      {
+        "key": "контрагент1",
+        "label": "Контрагент1",
+        "type": "string"
+      },
+      {
+        "key": "контрагент1_инн",
+        "label": "ИНН",
+        "type": "inn"
+      },
+      {
+        "key": "контрагент1_кпп",
+        "label": "КПП",
+        "type": "kpp"
+      },
+      {
+        "key": "контрагент1_адрес",
+        "label": "Адрес",
+        "type": "string"
+      },
+      {
+        "key": "контрагент2",
+        "label": "Контрагент2",
+        "type": "string"
+      },
+      {
+        "key": "контрагент2_инн",
+        "label": "ИНН",
+        "type": "inn"
+      },
+      {
+        "key": "контрагент2_кпп",
+        "label": "КПП",
+        "type": "kpp"
+      },
+      {
+        "key": "контрагент2_адрес",
+        "label": "Адрес",
+        "type": "string"
+      },
+      {
+        "key": "ндс",
+        "label": "НДС",
+        "type": "number"
+      },
+      {
+        "key": "сумма_с_ндс",
+        "label": "Сумма с НДС",
+        "type": "number"
+      }
+    ],
+    "max_tokens": 1024,
+    "postprocessing": [
+      "split_inn_kpp",
+      "validate_inn",
+      "validate_kpp",
+      "clean_address",
+      "fix_doc_number"
+    ]
+  },
+  {
+    "id": "torg12",
+    "name": "Товарная накладная (ТОРГ-12)",
+    "description": "Извлечение данных из товарных накладных",
+    "fields": [
+      {
+        "key": "тип_документа",
+        "label": "Тип документа",
+        "type": "string"
+      },
+      {
+        "key": "номер_документа",
+        "label": "Номер документа",
+        "type": "string"
+      },
+      {
+        "key": "дата_документа",
+        "label": "Дата документа",
+        "type": "date"
+      },
+      {
+        "key": "контрагент1",
+        "label": "Контрагент1",
+        "type": "string"
+      },
+      {
+        "key": "контрагент1_инн",
+        "label": "ИНН",
+        "type": "inn"
+      },
+      {
+        "key": "контрагент1_кпп",
+        "label": "КПП",
+        "type": "kpp"
+      },
+      {
+        "key": "контрагент1_адрес",
+        "label": "Адрес",
+        "type": "string"
+      },
+      {
+        "key": "контрагент2",
+        "label": "Контрагент2",
+        "type": "string"
+      },
+      {
+        "key": "контрагент2_инн",
+        "label": "ИНН",
+        "type": "inn"
+      },
+      {
+        "key": "контрагент2_кпп",
+        "label": "КПП",
+        "type": "kpp"
+      },
+      {
+        "key": "контрагент2_адрес",
+        "label": "Адрес",
+        "type": "string"
+      },
+      {
+        "key": "ндс",
+        "label": "НДС",
+        "type": "number"
+      },
+      {
+        "key": "сумма_с_ндс",
+        "label": "Сумма с НДС",
+        "type": "number"
+      }
+    ],
+    "max_tokens": 1024,
+    "postprocessing": [
+      "split_inn_kpp",
+      "validate_inn",
+      "validate_kpp",
+      "clean_address",
+      "fix_doc_number"
+    ]
+  },
+  {
+    "id": "schet_na_oplatu",
+    "name": "Счёт на оплату",
+    "description": "Извлечение данных из счетов на оплату",
+    "fields": [
+      {
+        "key": "тип_документа",
+        "label": "Тип документа",
+        "type": "string"
+      },
+      {
+        "key": "номер_документа",
+        "label": "Номер документа",
+        "type": "string"
+      },
+      {
+        "key": "дата_документа",
+        "label": "Дата документа",
+        "type": "date"
+      },
+      {
+        "key": "контрагент1",
+        "label": "Контрагент1",
+        "type": "string"
+      },
+      {
+        "key": "контрагент1_инн",
+        "label": "ИНН",
+        "type": "inn"
+      },
+      {
+        "key": "контрагент1_кпп",
+        "label": "КПП",
+        "type": "kpp"
+      },
+      {
+        "key": "контрагент1_адрес",
+        "label": "Адрес",
+        "type": "string"
+      },
+      {
+        "key": "контрагент2",
+        "label": "Контрагент2",
+        "type": "string"
+      },
+      {
+        "key": "контрагент2_инн",
+        "label": "ИНН",
+        "type": "inn"
+      },
+      {
+        "key": "контрагент2_кпп",
+        "label": "КПП",
+        "type": "kpp"
+      },
+      {
+        "key": "контрагент2_адрес",
+        "label": "Адрес",
+        "type": "string"
+      },
+      {
+        "key": "ндс",
+        "label": "НДС",
+        "type": "number"
+      },
+      {
+        "key": "сумма_с_ндс",
+        "label": "Сумма с НДС",
+        "type": "number"
+      }
+    ],
+    "max_tokens": 1024,
+    "postprocessing": [
+      "split_inn_kpp",
+      "validate_inn",
+      "validate_kpp",
+      "clean_address",
+      "fix_doc_number"
+    ]
+  },
+  {
+    "id": "schet_dogovor",
+    "name": "Счёт-договор",
+    "description": "Извлечение данных из счетов-договоров",
+    "fields": [
+      {
+        "key": "тип_документа",
+        "label": "Тип документа",
+        "type": "string"
+      },
+      {
+        "key": "номер_документа",
+        "label": "Номер документа",
+        "type": "string"
+      },
+      {
+        "key": "дата_документа",
+        "label": "Дата документа",
+        "type": "date"
+      },
+      {
+        "key": "контрагент1",
+        "label": "Контрагент1",
+        "type": "string"
+      },
+      {
+        "key": "контрагент1_инн",
+        "label": "ИНН",
+        "type": "inn"
+      },
+      {
+        "key": "контрагент1_кпп",
+        "label": "КПП",
+        "type": "kpp"
+      },
+      {
+        "key": "контрагент1_адрес",
+        "label": "Адрес",
+        "type": "string"
+      },
+      {
+        "key": "контрагент2",
+        "label": "Контрагент2",
+        "type": "string"
+      },
+      {
+        "key": "контрагент2_инн",
+        "label": "ИНН",
+        "type": "inn"
+      },
+      {
+        "key": "контрагент2_кпп",
+        "label": "КПП",
+        "type": "kpp"
+      },
+      {
+        "key": "контрагент2_адрес",
+        "label": "Адрес",
+        "type": "string"
+      },
+      {
+        "key": "ндс",
+        "label": "НДС",
+        "type": "number"
+      },
+      {
+        "key": "сумма_с_ндс",
+        "label": "Сумма с НДС",
+        "type": "number"
+      }
+    ],
+    "max_tokens": 1024,
+    "postprocessing": [
+      "split_inn_kpp",
+      "validate_inn",
+      "validate_kpp",
+      "clean_address",
+      "fix_doc_number"
+    ]
+  },
+  {
+    "id": "dogovor",
+    "name": "Договор",
+    "description": "Извлечение данных из договоров",
+    "fields": [
+      {
+        "key": "тип_документа",
+        "label": "Тип документа",
+        "type": "string"
+      },
+      {
+        "key": "номер_документа",
+        "label": "Номер документа",
+        "type": "string"
+      },
+      {
+        "key": "дата_документа",
+        "label": "Дата документа",
+        "type": "date"
+      },
+      {
+        "key": "контрагент1",
+        "label": "Контрагент1",
+        "type": "string"
+      },
+      {
+        "key": "контрагент1_инн",
+        "label": "ИНН",
+        "type": "inn"
+      },
+      {
+        "key": "контрагент1_кпп",
+        "label": "КПП",
+        "type": "kpp"
+      },
+      {
+        "key": "контрагент1_адрес",
+        "label": "Адрес",
+        "type": "string"
+      },
+      {
+        "key": "контрагент2",
+        "label": "Контрагент2",
+        "type": "string"
+      },
+      {
+        "key": "контрагент2_инн",
+        "label": "ИНН",
+        "type": "inn"
+      },
+      {
+        "key": "контрагент2_кпп",
+        "label": "КПП",
+        "type": "kpp"
+      },
+      {
+        "key": "контрагент2_адрес",
+        "label": "Адрес",
+        "type": "string"
+      },
+      {
+        "key": "ндс",
+        "label": "НДС",
+        "type": "number"
+      },
+      {
+        "key": "сумма_с_ндс",
+        "label": "Сумма с НДС",
+        "type": "number"
+      }
+    ],
+    "max_tokens": 1024,
+    "postprocessing": [
+      "split_inn_kpp",
+      "validate_inn",
+      "validate_kpp",
+      "clean_address",
+      "fix_doc_number"
+    ]
+  },
+  {
+    "id": "transportnaya",
+    "name": "Транспортная накладная",
+    "description": "Извлечение данных из транспортных накладных",
+    "fields": [
+      {
+        "key": "тип_документа",
+        "label": "Тип документа",
+        "type": "string"
+      },
+      {
+        "key": "номер_документа",
+        "label": "Номер документа",
+        "type": "string"
+      },
+      {
+        "key": "дата_документа",
+        "label": "Дата документа",
+        "type": "date"
+      },
+      {
+        "key": "контрагент1",
+        "label": "Контрагент1",
+        "type": "string"
+      },
+      {
+        "key": "контрагент1_инн",
+        "label": "ИНН",
+        "type": "inn"
+      },
+      {
+        "key": "контрагент1_кпп",
+        "label": "КПП",
+        "type": "kpp"
+      },
+      {
+        "key": "контрагент1_адрес",
+        "label": "Адрес",
+        "type": "string"
+      },
+      {
+        "key": "контрагент2",
+        "label": "Контрагент2",
+        "type": "string"
+      },
+      {
+        "key": "контрагент2_инн",
+        "label": "ИНН",
+        "type": "inn"
+      },
+      {
+        "key": "контрагент2_кпп",
+        "label": "КПП",
+        "type": "kpp"
+      },
+      {
+        "key": "контрагент2_адрес",
+        "label": "Адрес",
+        "type": "string"
+      },
+      {
+        "key": "ндс",
+        "label": "НДС",
+        "type": "number"
+      },
+      {
+        "key": "сумма_с_ндс",
+        "label": "Сумма с НДС",
+        "type": "number"
+      }
+    ],
+    "max_tokens": 1024,
+    "postprocessing": [
+      "validate_inn",
+      "validate_kpp",
+      "fix_doc_number"
+    ]
+  },
+  {
+    "id": "deklaratsiya",
+    "name": "Таможенная декларация",
+    "description": "Извлечение данных из таможенных деклараций (ДТ)",
+    "fields": [
+      {
+        "key": "тип_документа",
+        "label": "Тип документа",
+        "type": "string"
+      },
+      {
+        "key": "номер_документа",
+        "label": "Номер документа",
+        "type": "string"
+      },
+      {
+        "key": "дата_документа",
+        "label": "Дата документа",
+        "type": "date"
+      },
+      {
+        "key": "контрагент1",
+        "label": "Контрагент1",
+        "type": "string"
+      },
+      {
+        "key": "контрагент1_инн",
+        "label": "ИНН",
+        "type": "inn"
+      },
+      {
+        "key": "контрагент1_кпп",
+        "label": "КПП",
+        "type": "kpp"
+      },
+      {
+        "key": "контрагент1_адрес",
+        "label": "Адрес",
+        "type": "string"
+      },
+      {
+        "key": "контрагент2",
+        "label": "Контрагент2",
+        "type": "string"
+      },
+      {
+        "key": "контрагент2_инн",
+        "label": "ИНН",
+        "type": "inn"
+      },
+      {
+        "key": "контрагент2_кпп",
+        "label": "КПП",
+        "type": "kpp"
+      },
+      {
+        "key": "контрагент2_адрес",
+        "label": "Адрес",
+        "type": "string"
+      },
+      {
+        "key": "ндс",
+        "label": "НДС",
+        "type": "number"
+      },
+      {
+        "key": "сумма_с_ндс",
+        "label": "Сумма с НДС",
+        "type": "number"
+      }
+    ],
+    "max_tokens": 1024,
+    "postprocessing": [
+      "validate_inn",
+      "fix_doc_number"
+    ]
+  },
+  {
+    "id": "platezhnoe",
+    "name": "Платёжное поручение",
+    "description": "Извлечение данных из платёжных поручений",
+    "fields": [
+      {
+        "key": "тип_документа",
+        "label": "Тип документа",
+        "type": "string"
+      },
+      {
+        "key": "номер_документа",
+        "label": "Номер документа",
+        "type": "string"
+      },
+      {
+        "key": "дата_документа",
+        "label": "Дата документа",
+        "type": "date"
+      },
+      {
+        "key": "контрагент1",
+        "label": "Контрагент1",
+        "type": "string"
+      },
+      {
+        "key": "контрагент1_инн",
+        "label": "ИНН",
+        "type": "inn"
+      },
+      {
+        "key": "контрагент1_кпп",
+        "label": "КПП",
+        "type": "kpp"
+      },
+      {
+        "key": "контрагент1_адрес",
+        "label": "Адрес",
+        "type": "string"
+      },
+      {
+        "key": "контрагент2",
+        "label": "Контрагент2",
+        "type": "string"
+      },
+      {
+        "key": "контрагент2_инн",
+        "label": "ИНН",
+        "type": "inn"
+      },
+      {
+        "key": "контрагент2_кпп",
+        "label": "КПП",
+        "type": "kpp"
+      },
+      {
+        "key": "контрагент2_адрес",
+        "label": "Адрес",
+        "type": "string"
+      },
+      {
+        "key": "ндс",
+        "label": "НДС",
+        "type": "number"
+      },
+      {
+        "key": "сумма_с_ндс",
+        "label": "Сумма с НДС",
+        "type": "number"
+      }
+    ],
+    "max_tokens": 1024,
+    "postprocessing": [
+      "split_inn_kpp",
+      "validate_inn",
+      "validate_kpp",
+      "fix_doc_number"
+    ]
+  },
+  {
+    "id": "doverennost",
+    "name": "Доверенность",
+    "description": "Извлечение данных из доверенностей",
+    "fields": [
+      {
+        "key": "тип_документа",
+        "label": "Тип документа",
+        "type": "string"
+      },
+      {
+        "key": "номер_документа",
+        "label": "Номер документа",
+        "type": "string"
+      },
+      {
+        "key": "дата_документа",
+        "label": "Дата документа",
+        "type": "date"
+      },
+      {
+        "key": "контрагент1",
+        "label": "Контрагент1",
+        "type": "string"
+      },
+      {
+        "key": "контрагент1_инн",
+        "label": "ИНН",
+        "type": "inn"
+      },
+      {
+        "key": "контрагент1_кпп",
+        "label": "КПП",
+        "type": "kpp"
+      },
+      {
+        "key": "контрагент1_адрес",
+        "label": "Адрес",
+        "type": "string"
+      },
+      {
+        "key": "контрагент2",
+        "label": "Контрагент2",
+        "type": "string"
+      },
+      {
+        "key": "контрагент2_инн",
+        "label": "ИНН",
+        "type": "inn"
+      },
+      {
+        "key": "контрагент2_кпп",
+        "label": "КПП",
+        "type": "kpp"
+      },
+      {
+        "key": "контрагент2_адрес",
+        "label": "Адрес",
+        "type": "string"
+      },
+      {
+        "key": "ндс",
+        "label": "НДС",
+        "type": "number"
+      },
+      {
+        "key": "сумма_с_ндс",
+        "label": "Сумма с НДС",
+        "type": "number"
+      }
+    ],
+    "max_tokens": 1024,
+    "postprocessing": [
+      "split_inn_kpp",
+      "validate_inn",
+      "validate_kpp",
+      "fix_doc_number"
+    ]
+  },
+  {
+    "id": "dokumenty_sezar",
+    "name": "Документы Сезар",
+    "description": "Пользовательский шаблон",
+    "fields": [
+      {
+        "key": "тип_документа",
+        "label": "Тип документа",
+        "type": "string"
+      },
+      {
+        "key": "номер_документа",
+        "label": "Номер документа",
+        "type": "string"
+      },
+      {
+        "key": "дата_документа",
+        "label": "Дата документа",
+        "type": "date"
+      },
+      {
+        "key": "период",
+        "label": "Период",
+        "type": "date"
+      },
+      {
+        "key": "кратко о чем документ",
+        "label": "Кратко о чем документ",
+        "type": "string"
+      },
+      {
+        "key": "цена",
+        "label": "Цена",
+        "type": "string"
+      },
+      {
+        "key": "валюта",
+        "label": "Валюта",
+        "type": "string"
+      },
+      {
+        "key": "контрагент1",
+        "label": "Контрагент1",
+        "type": "string"
+      },
+      {
+        "key": "контрагент1_инн",
+        "label": "Контрагент1 инн",
+        "type": "inn"
+      },
+      {
+        "key": "контрагент2",
+        "label": "Контрагент2",
+        "type": "string"
+      },
+      {
+        "key": "контрагент2_инн",
+        "label": "Контрагент2 инн",
+        "type": "inn"
+      }
+    ],
+    "max_tokens": 1536,
+    "postprocessing": []
+  },
+  {
+    "id": "testovyy_shablon",
+    "name": "Тестовый шаблон",
+    "description": "Для теста",
+    "fields": [
+      {
+        "key": "тип_документа",
+        "label": "Тип документа",
+        "type": "string"
+      },
+      {
+        "key": "номер_документа",
+        "label": "Номер документа",
+        "type": "string"
+      },
+      {
+        "key": "дата_документа",
+        "label": "Дата документа",
+        "type": "date"
+      },
+      {
+        "key": "контрагент1",
+        "label": "Контрагент1",
+        "type": "string"
+      },
+      {
+        "key": "контрагент1_инн",
+        "label": "ИНН",
+        "type": "inn"
+      },
+      {
+        "key": "контрагент1_кпп",
+        "label": "КПП",
+        "type": "kpp"
+      },
+      {
+        "key": "контрагент1_адрес",
+        "label": "Адрес",
+        "type": "string"
+      },
+      {
+        "key": "контрагент2",
+        "label": "Контрагент2",
+        "type": "string"
+      },
+      {
+        "key": "контрагент2_инн",
+        "label": "ИНН",
+        "type": "inn"
+      },
+      {
+        "key": "контрагент2_кпп",
+        "label": "КПП",
+        "type": "kpp"
+      },
+      {
+        "key": "контрагент2_адрес",
+        "label": "Адрес",
+        "type": "string"
+      },
+      {
+        "key": "ндс",
+        "label": "НДС",
+        "type": "number"
+      },
+      {
+        "key": "сумма_с_ндс",
+        "label": "Сумма с НДС",
+        "type": "number"
+      }
+    ],
+    "max_tokens": 1536,
+    "postprocessing": []
+  },
+  {
+    "id": "testovyy",
+    "name": "Тестовый",
+    "description": "test",
+    "fields": [
+      {
+        "key": "тип_документа",
+        "label": "Тип документа",
+        "type": "string"
+      },
+      {
+        "key": "номер_документа",
+        "label": "Номер документа",
+        "type": "string"
+      },
+      {
+        "key": "дата_документа",
+        "label": "Дата документа",
+        "type": "date"
+      },
+      {
+        "key": "контрагент1",
+        "label": "Контрагент1",
+        "type": "string"
+      },
+      {
+        "key": "контрагент1_инн",
+        "label": "ИНН",
+        "type": "inn"
+      },
+      {
+        "key": "контрагент1_кпп",
+        "label": "КПП",
+        "type": "kpp"
+      },
+      {
+        "key": "контрагент1_адрес",
+        "label": "Адрес",
+        "type": "string"
+      },
+      {
+        "key": "контрагент2",
+        "label": "Контрагент2",
+        "type": "string"
+      },
+      {
+        "key": "контрагент2_инн",
+        "label": "ИНН",
+        "type": "inn"
+      },
+      {
+        "key": "контрагент2_кпп",
+        "label": "КПП",
+        "type": "kpp"
+      },
+      {
+        "key": "контрагент2_адрес",
+        "label": "Адрес",
+        "type": "string"
+      },
+      {
+        "key": "ндс",
+        "label": "НДС",
+        "type": "number"
+      },
+      {
+        "key": "сумма_с_ндс",
+        "label": "Сумма с НДС",
+        "type": "number"
+      }
+    ],
+    "max_tokens": 1536,
+    "postprocessing": []
+  },
+  {
+    "id": "sezar_2",
+    "name": "Сезар 2",
+    "description": "изменил тип документов",
+    "fields": [
+      {
+        "key": "тип_документа",
+        "label": "Тип документа",
+        "type": "string"
+      },
+      {
+        "key": "номер_документа",
+        "label": "Номер документа",
+        "type": "string"
+      },
+      {
+        "key": "дата_документа",
+        "label": "Дата документа",
+        "type": "date"
+      },
+      {
+        "key": "период",
+        "label": "Период",
+        "type": "date"
+      },
+      {
+        "key": "кратко о чем документ",
+        "label": "Кратко о чем документ",
+        "type": "string"
+      },
+      {
+        "key": "цена",
+        "label": "Цена",
+        "type": "string"
+      },
+      {
+        "key": "валюта",
+        "label": "Валюта",
+        "type": "string"
+      },
+      {
+        "key": "контрагент1",
+        "label": "Контрагент1",
+        "type": "string"
+      },
+      {
+        "key": "контрагент1_инн",
+        "label": "Контрагент1 инн",
+        "type": "inn"
+      },
+      {
+        "key": "контрагент2",
+        "label": "Контрагент2",
+        "type": "string"
+      },
+      {
+        "key": "контрагент2_инн",
+        "label": "Контрагент2 инн",
+        "type": "inn"
+      }
+    ],
+    "max_tokens": 1536,
+    "postprocessing": []
+  },
+  {
+    "id": "sezar_3",
+    "name": "Сезар 3",
+    "description": "ИНН",
+    "fields": [
+      {
+        "key": "тип_документа",
+        "label": "Тип документа",
+        "type": "string"
+      },
+      {
+        "key": "номер_документа",
+        "label": "Номер документа",
+        "type": "string"
+      },
+      {
+        "key": "дата_документа",
+        "label": "Дата документа",
+        "type": "date"
+      },
+      {
+        "key": "период",
+        "label": "Период",
+        "type": "date"
+      },
+      {
+        "key": "кратко о чем документ",
+        "label": "Кратко о чем документ",
+        "type": "string"
+      },
+      {
+        "key": "цена",
+        "label": "Цена",
+        "type": "string"
+      },
+      {
+        "key": "валюта",
+        "label": "Валюта",
+        "type": "string"
+      },
+      {
+        "key": "контрагент1",
+        "label": "Контрагент1",
+        "type": "string"
+      },
+      {
+        "key": "контрагент1_инн",
+        "label": "Контрагент1 инн",
+        "type": "inn"
+      },
+      {
+        "key": "контрагент2",
+        "label": "Контрагент2",
+        "type": "string"
+      },
+      {
+        "key": "контрагент2_инн",
+        "label": "Контрагент2 инн",
+        "type": "inn"
+      }
+    ],
+    "max_tokens": 1536,
+    "postprocessing": []
+  },
+  {
+    "id": "pasport",
+    "name": "Паспорт",
+    "description": "Паспорт РФ — идеальный промпт",
+    "fields": [
+      {
+        "key": "серия_и_номер",
+        "label": "Серия и номер",
+        "type": "string"
+      },
+      {
+        "key": "дата_выдачи",
+        "label": "Дата выдачи",
+        "type": "date"
+      },
+      {
+        "key": "код_подразделения",
+        "label": "Код подразделения",
+        "type": "string"
+      },
+      {
+        "key": "кем_выдан",
+        "label": "Кем выдан",
+        "type": "string"
+      },
+      {
+        "key": "фамилия",
+        "label": "Фамилия",
+        "type": "string"
+      },
+      {
+        "key": "имя",
+        "label": "Имя",
+        "type": "string"
+      },
+      {
+        "key": "отчество",
+        "label": "Отчество",
+        "type": "string"
+      },
+      {
+        "key": "пол",
+        "label": "Пол",
+        "type": "string"
+      },
+      {
+        "key": "дата_рождения",
+        "label": "Дата рождения",
+        "type": "date"
+      },
+      {
+        "key": "место_рождения",
+        "label": "Место рождения",
+        "type": "string"
+      },
+      {
+        "key": "адрес_регистрации",
+        "label": "Адрес регистрации",
+        "type": "string"
+      }
+    ],
+    "max_tokens": 1536,
+    "postprocessing": []
+  },
+  {
+    "id": "pasport_2",
+    "name": "Паспорт 2",
+    "description": "Паспорт РФ — идеальный промпт",
+    "fields": [
+      {
+        "key": "серия_и_номер",
+        "label": "Серия и номер",
+        "type": "string"
+      },
+      {
+        "key": "дата_выдачи",
+        "label": "Дата выдачи",
+        "type": "date"
+      },
+      {
+        "key": "код_подразделения",
+        "label": "Код подразделения",
+        "type": "string"
+      },
+      {
+        "key": "кем_выдан",
+        "label": "Кем выдан",
+        "type": "string"
+      },
+      {
+        "key": "фамилия",
+        "label": "Фамилия",
+        "type": "string"
+      },
+      {
+        "key": "имя",
+        "label": "Имя",
+        "type": "string"
+      },
+      {
+        "key": "отчество",
+        "label": "Отчество",
+        "type": "string"
+      },
+      {
+        "key": "пол",
+        "label": "Пол",
+        "type": "string"
+      },
+      {
+        "key": "дата_рождения",
+        "label": "Дата рождения",
+        "type": "date"
+      },
+      {
+        "key": "место_рождения",
+        "label": "Место рождения",
+        "type": "string"
+      },
+      {
+        "key": "адрес_регистрации",
+        "label": "Адрес регистрации",
+        "type": "string"
+      }
+    ],
+    "max_tokens": 1536,
+    "postprocessing": []
+  },
+  {
+    "id": "tekst",
+    "name": "Текст",
+    "description": "извлечение",
+    "fields": [],
+    "max_tokens": 1536,
+    "postprocessing": []
+  }
+]

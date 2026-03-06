@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+venv/
+venv_llamacpp/
+env/
+.env
+
+# Data directories
+uploads/
+results/
+models/
+
+# Database
+*.db
+*.db-shm
+*.db-wal
+
+# Logs
+*.log
+uvicorn.log
+
+# Backups and temporary files
+*.bak
+*.bak.*
+*.bak_*
+*.schema_bak_*
+app_backup_*/
+storage_patch.py
+sql_trace.py
+sql_trace2.py
+trace_all.py
+trace_mark.py
+
+# llama.cpp binaries (large, platform-specific)
+bin/
+
+# Settings (instance-specific)
+settings.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
